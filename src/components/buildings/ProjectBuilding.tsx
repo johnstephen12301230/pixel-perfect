@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Html } from "@react-three/drei";
 import type { Project } from "@/types/project";
 import { useCityStore } from "@/store/useCityStore";
@@ -42,6 +42,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
   const selected = useCityStore((s) => s.selectedProjectId === project.id);
   const selectProject = useCityStore((s) => s.selectProject);
   const hl = hover || selected;
+  useEffect(() => () => { document.body.style.cursor = ""; }, []);
   const { accentColor: a, floors } = project;
 
   let body: React.ReactNode;
@@ -103,7 +104,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
       position={position}
       onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = "pointer"; }}
       onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}
-      onClick={(e) => { e.stopPropagation(); selectProject(project.id); }}
+      onClick={(e) => { e.stopPropagation(); if (e.delta <= 4) selectProject(project.id); }}
     >
       {/* Entry plaza */}
       <mesh position={[0, 0.02, 0]} receiveShadow>
@@ -111,6 +112,12 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         <meshStandardMaterial color={hl ? "#dbe8f6" : "#e6e9ec"} />
       </mesh>
       {body}
+      {hl && [[0, -2.9, 5.9, 0.09], [0, 2.9, 5.9, 0.09], [-2.9, 0, 0.09, 5.9], [2.9, 0, 0.09, 5.9]].map(([x, z, w, d], i) => (
+        <mesh key={`outline-${i}`} position={[x, 0.07, z]}>
+          <boxGeometry args={[w, 0.055, d]} />
+          <meshStandardMaterial color={a} emissive={a} emissiveIntensity={selected ? 0.65 : 0.3} />
+        </mesh>
+      ))}
       {hl && (
         <Html position={[0, top + 0.8, 0]} center zIndexRange={[20, 0]}>
           <div className="glass pointer-events-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold">

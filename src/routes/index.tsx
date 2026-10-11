@@ -10,6 +10,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "An interactive 3D developer portfolio city." },
       { property: "og:title", content: "DevCity — The Living Glass Metropolis" },
       { property: "og:description", content: "An interactive 3D developer portfolio city." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
 });
