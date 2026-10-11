@@ -23,8 +23,8 @@ export function DevCitySidebar() {
       if (e.key === "Tab" && panelRef.current) {
         const f = panelRef.current.querySelectorAll<HTMLElement>("button, a[href]");
         const first = f[0], last = f[f.length - 1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
       }
     };
     window.addEventListener("keydown", onKey);
