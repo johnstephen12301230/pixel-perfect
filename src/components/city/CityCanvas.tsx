@@ -1,33 +1,16 @@
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { AdaptiveDpr, Environment, Lightformer, OrbitControls, OrthographicCamera } from "@react-three/drei";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { AdaptiveDpr, Environment, Lightformer } from "@react-three/drei";
 import { useCityStore } from "@/store/useCityStore";
 import { CityEnvironment } from "./CityEnvironment";
-
-function Controls() {
-  const ref = useRef<OrbitControlsImpl>(null);
-  const token = useCityStore((s) => s.cameraResetToken);
-  useEffect(() => { if (token) ref.current?.reset(); }, [token]);
-  return (
-    <OrbitControls
-      ref={ref}
-      makeDefault
-      enableDamping
-      minZoom={10}
-      maxZoom={60}
-      minPolarAngle={Math.PI / 6}
-      maxPolarAngle={Math.PI / 2.6}
-      screenSpacePanning={false}
-    />
-  );
-}
+import { CityCameraRig } from "./CityCameraRig";
 
 export function CityCanvas() {
   return (
-    <Canvas shadows dpr={[1, 2]} className="!fixed inset-0" onPointerMissed={() => useCityStore.getState().selectProject(null)}>
-      <OrthographicCamera makeDefault position={[40, 38, 40]} zoom={typeof window !== "undefined" && window.innerWidth < 640 ? 11 : 19} near={-200} far={400} />
-      <Controls />
+    <Canvas shadows dpr={[1, 2]} className="!fixed inset-0" onPointerMissed={(event) => {
+      if (event.type === "click" && useCityStore.getState().selectedProjectId) useCityStore.getState().selectProject(null);
+    }}>
+      <CityCameraRig />
       <AdaptiveDpr pixelated={false} />
       <fog attach="fog" args={["#dfeaf3", 90, 180]} />
       <hemisphereLight args={["#ffffff", "#c9d8e4", 0.9]} />
