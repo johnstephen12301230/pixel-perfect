@@ -8,6 +8,8 @@ export const Route = createFileRoute("/portfolio")({
       { name: "description", content: "The professional portfolio behind the DevCity metropolis." },
       { property: "og:title", content: "Portfolio — DevCity" },
       { property: "og:description", content: "The professional portfolio behind the DevCity metropolis." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PortfolioPage,

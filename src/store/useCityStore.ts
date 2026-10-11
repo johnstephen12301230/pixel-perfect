@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { PROJECTS } from "@/data/projects";
 
 export type InteractionState =
   | "city-overview"
@@ -20,6 +21,7 @@ interface CityState {
   resetCity: () => void;
   notify: (msg: string) => void;
   clearNotice: () => void;
+  completeCameraTransition: (token: number) => void;
 }
 
 export const useCityStore = create<CityState>((set) => ({
@@ -30,17 +32,30 @@ export const useCityStore = create<CityState>((set) => ({
   cameraResetToken: 0,
   notice: null,
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
-  selectProject: (id) =>
-    set({ selectedProjectId: id, selectedSlotId: null, interaction: id ? "inspecting-building" : "city-overview" }),
+  selectProject: (id) => {
+    if (id && !PROJECTS.some((project) => project.id === id)) return;
+    set((s) => {
+      if (id === s.selectedProjectId) return s;
+      return { selectedProjectId: id, selectedSlotId: null, notice: null,
+        cameraResetToken: s.cameraResetToken + 1,
+        interaction: id ? "focusing-building" : "returning-to-city" };
+    });
+  },
   selectSlot: (id) =>
-    set({ selectedSlotId: id, selectedProjectId: null, interaction: id ? "focusing-construction-slot" : "city-overview" }),
+    set((s) => ({ selectedSlotId: id, selectedProjectId: null,
+      cameraResetToken: s.cameraResetToken + 1,
+      interaction: id ? "focusing-construction-slot" : "returning-to-city" })),
   resetCity: () =>
     set((s) => ({
       selectedProjectId: null,
       selectedSlotId: null,
-      interaction: "city-overview",
+       interaction: "returning-to-city",
       cameraResetToken: s.cameraResetToken + 1,
     })),
   notify: (notice) => set({ notice }),
   clearNotice: () => set({ notice: null }),
+  completeCameraTransition: (token) => set((s) => {
+    if (token !== s.cameraResetToken) return s;
+    return { interaction: s.selectedProjectId ? "inspecting-building" : s.selectedSlotId ? "focusing-construction-slot" : "city-overview" };
+  }),
 }));

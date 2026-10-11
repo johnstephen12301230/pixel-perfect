@@ -101,7 +101,7 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
   :focus-visible {
     outline: 2px solid var(--ring);
@@ -151,4 +151,12 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.project-details {
+  animation: project-reveal 260ms ease-out;
+}
+@keyframes project-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }

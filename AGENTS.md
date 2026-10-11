@@ -14,3 +14,5 @@
 - UI/scene state lives in a Zustand store (src/store/useCityStore.ts) with explicit interaction states. Why: prevents conflicting camera/selection transitions.
 - The 3D route (/projects) uses ssr:false; Portfolio has no WebGL. Why: Canvas can't server-render and Portfolio shouldn't pay for 3D.
 - Frontend-only: no backend, auth or database. Why: owner requirement.
+- Camera motion is owned by CityCameraRig; disable orbit updates and drain damping during tokenized transitions, then restore controls only on completion. Why: focus, return, and rapid re-selection must never fight user orbit input or finish stale transitions.
+- ProjectDetailsPanel is a DOM overlay on /projects backed by the existing project registry. Why: details stay accessible and Portfolio remains free of WebGL.
