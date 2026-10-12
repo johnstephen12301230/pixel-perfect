@@ -25,7 +25,7 @@ export function DevelopmentLot({ lot, projects, nextSlotId }: Props) {
         <meshStandardMaterial color="#a9cfa0" roughness={0.95} />
       </mesh>
       {/* Corner trees */}
-      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz]) => (
+      {([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).map(([sx, sz]) => (
         <Tree key={`${sx}${sz}`} position={[sx * (w / 2 - 1.3), 0.2, sz * (d / 2 - 1.3)]} scale={0.9} />
       ))}
 

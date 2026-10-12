@@ -35,14 +35,14 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
         <meshStandardMaterial color="#cbbfa8" roughness={1} />
       </mesh>
       {/* Border markers */}
-      {[[0, -2.7, 5.6, 0.14], [0, 2.7, 5.6, 0.14], [-2.7, 0, 0.14, 5.6], [2.7, 0, 0.14, 5.6]].map(([x, z, w, d], i) => (
+      {([[0, -2.7, 5.6, 0.14], [0, 2.7, 5.6, 0.14], [-2.7, 0, 0.14, 5.6], [2.7, 0, 0.14, 5.6]] as const).map(([x, z, w, d], i) => (
         <mesh key={i} position={[x, 0.16, z]}>
           <boxGeometry args={[w, 0.08, d]} />
           <meshStandardMaterial color={active ? "#2f7cf6" : "#f2b33d"} emissive={active ? "#2f7cf6" : "#000"} emissiveIntensity={0.4} />
         </mesh>
       ))}
       {/* Corner cones */}
-      {[[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]].map(([x, z]) => (
+      {([[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]] as const).map(([x, z]) => (
         <mesh key={`${x}${z}`} position={[x, 0.4, z]} castShadow>
           <coneGeometry args={[0.16, 0.5, 10]} />
           <meshStandardMaterial color="#f08a3c" />

@@ -112,7 +112,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         <meshStandardMaterial color={hl ? "#dbe8f6" : "#e6e9ec"} />
       </mesh>
       {body}
-      {hl && [[0, -2.9, 5.9, 0.09], [0, 2.9, 5.9, 0.09], [-2.9, 0, 0.09, 5.9], [2.9, 0, 0.09, 5.9]].map(([x, z, w, d], i) => (
+      {hl && ([[0, -2.9, 5.9, 0.09], [0, 2.9, 5.9, 0.09], [-2.9, 0, 0.09, 5.9], [2.9, 0, 0.09, 5.9]] as const).map(([x, z, w, d], i) => (
         <mesh key={`outline-${i}`} position={[x, 0.07, z]}>
           <boxGeometry args={[w, 0.055, d]} />
           <meshStandardMaterial color={a} emissive={a} emissiveIntensity={selected ? 0.65 : 0.3} />
