@@ -49,7 +49,6 @@ export function CityCameraRig() {
       } else {
         const initial = { position: new Vector3(40, 38, 40), target: new Vector3(), zoom: size.width < 640 ? 11 : 19 };
         destination.current = overview.current ?? initial;
-        overview.current = null;
       }
     }
     const goal = destination.current;
@@ -70,6 +69,7 @@ export function CityCameraRig() {
       camera.updateProjectionMatrix();
       orbit.update();
       destination.current = null;
+      if (!state.selectedProjectId) overview.current = null;
       orbit.enableDamping = true;
       orbit.enabled = !state.sidebarOpen;
       state.completeCameraTransition(activeToken.current);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Html } from "@react-three/drei";
+import { CityLabel } from "@/components/city/CityLabel";
 import type { Project } from "@/types/project";
 import { useCityStore } from "@/store/useCityStore";
 
@@ -112,19 +112,19 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         <meshStandardMaterial color={hl ? "#dbe8f6" : "#e6e9ec"} />
       </mesh>
       {body}
-      {hl && [[0, -2.9, 5.9, 0.09], [0, 2.9, 5.9, 0.09], [-2.9, 0, 0.09, 5.9], [2.9, 0, 0.09, 5.9]].map(([x, z, w, d], i) => (
+      {hl && ([[0, -2.9, 5.9, 0.09], [0, 2.9, 5.9, 0.09], [-2.9, 0, 0.09, 5.9], [2.9, 0, 0.09, 5.9]] as const).map(([x, z, w, d], i) => (
         <mesh key={`outline-${i}`} position={[x, 0.07, z]}>
           <boxGeometry args={[w, 0.055, d]} />
           <meshStandardMaterial color={a} emissive={a} emissiveIntensity={selected ? 0.65 : 0.3} />
         </mesh>
       ))}
       {hl && (
-        <Html position={[0, top + 0.8, 0]} center zIndexRange={[20, 0]}>
+        <CityLabel position={[0, top + 0.8, 0]}>
           <div className="glass pointer-events-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold">
             <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: a }} />
             {project.name}
           </div>
-        </Html>
+        </CityLabel>
       )}
     </group>
   );

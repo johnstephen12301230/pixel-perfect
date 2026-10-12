@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { CityLabel } from "./CityLabel";
 import type * as THREE from "three";
 import { useCityStore } from "@/store/useCityStore";
 
@@ -35,14 +35,14 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
         <meshStandardMaterial color="#cbbfa8" roughness={1} />
       </mesh>
       {/* Border markers */}
-      {[[0, -2.7, 5.6, 0.14], [0, 2.7, 5.6, 0.14], [-2.7, 0, 0.14, 5.6], [2.7, 0, 0.14, 5.6]].map(([x, z, w, d], i) => (
+      {([[0, -2.7, 5.6, 0.14], [0, 2.7, 5.6, 0.14], [-2.7, 0, 0.14, 5.6], [2.7, 0, 0.14, 5.6]] as const).map(([x, z, w, d], i) => (
         <mesh key={i} position={[x, 0.16, z]}>
           <boxGeometry args={[w, 0.08, d]} />
           <meshStandardMaterial color={active ? "#2f7cf6" : "#f2b33d"} emissive={active ? "#2f7cf6" : "#000"} emissiveIntensity={0.4} />
         </mesh>
       ))}
       {/* Corner cones */}
-      {[[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]].map(([x, z]) => (
+      {([[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]] as const).map(([x, z]) => (
         <mesh key={`${x}${z}`} position={[x, 0.4, z]} castShadow>
           <coneGeometry args={[0.16, 0.5, 10]} />
           <meshStandardMaterial color="#f08a3c" />
@@ -59,11 +59,11 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
           <meshStandardMaterial color="#2f7cf6" metalness={0.3} roughness={0.2} />
         </mesh>
       </group>
-      <Html position={[0, 3.4, 0]} center zIndexRange={[20, 0]}>
+      <CityLabel position={[0, 3.4, 0]}>
         <div className="glass pointer-events-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold">
           Build New Project
         </div>
-      </Html>
+      </CityLabel>
     </group>
   );
 }

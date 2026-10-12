@@ -16,3 +16,4 @@
 - Frontend-only: no backend, auth or database. Why: owner requirement.
 - Camera motion is owned by CityCameraRig; disable orbit updates and drain damping during tokenized transitions, then restore controls only on completion. Why: focus, return, and rapid re-selection must never fight user orbit input or finish stale transitions.
 - ProjectDetailsPanel is a DOM overlay on /projects backed by the existing project registry. Why: details stay accessible and Portfolio remains free of WebGL.
+- In-world labels use CityLabel DOM roots with deferred cleanup. Why: avoid synchronous DOM-root unmount inside the 3D renderer during selection and route cleanup.

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ArrowLeft, ArrowUpRight, Building2, Check, Github, Layers, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Building2, Check, Code2, Layers, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PROJECTS } from "@/data/projects";
 import { CITY_LOTS } from "@/data/cityLots";
@@ -59,7 +59,7 @@ export function ProjectDetailsPanel() {
       </div>
       <div className="flex shrink-0 gap-2 border-t border-glass-border p-4">
         {project.liveUrl ? <Button asChild className="flex-1 rounded-full btn-primary-glass"><a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Live project <ArrowUpRight /></a></Button> : <Button disabled className="flex-1 rounded-full">Live unavailable <ArrowUpRight /></Button>}
-        {project.repositoryUrl ? <Button asChild variant="outline" className="flex-1 rounded-full"><a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer"><Github /> Repository</a></Button> : <Button disabled variant="outline" className="flex-1 rounded-full"><Github /> No repository</Button>}
+        {project.repositoryUrl ? <Button asChild variant="outline" className="flex-1 rounded-full"><a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer"><Code2 /> Repository</a></Button> : <Button disabled variant="outline" className="flex-1 rounded-full"><Code2 /> No repository</Button>}
       </div>
     </aside>
   );
