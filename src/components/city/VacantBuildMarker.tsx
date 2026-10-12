@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { CityLabel } from "./CityLabel";
 import type * as THREE from "three";
 import { useCityStore } from "@/store/useCityStore";
 
@@ -59,11 +59,11 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
           <meshStandardMaterial color="#2f7cf6" metalness={0.3} roughness={0.2} />
         </mesh>
       </group>
-      <Html position={[0, 3.4, 0]} center zIndexRange={[20, 0]}>
+      <CityLabel position={[0, 3.4, 0]}>
         <div className="glass pointer-events-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold">
           Build New Project
         </div>
-      </Html>
+      </CityLabel>
     </group>
   );
 }

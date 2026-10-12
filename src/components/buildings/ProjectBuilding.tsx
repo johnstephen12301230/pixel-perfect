@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Html } from "@react-three/drei";
+import { CityLabel } from "@/components/city/CityLabel";
 import type { Project } from "@/types/project";
 import { useCityStore } from "@/store/useCityStore";
 
@@ -119,12 +119,12 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         </mesh>
       ))}
       {hl && (
-        <Html position={[0, top + 0.8, 0]} center zIndexRange={[20, 0]}>
+        <CityLabel position={[0, top + 0.8, 0]}>
           <div className="glass pointer-events-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold">
             <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: a }} />
             {project.name}
           </div>
-        </Html>
+        </CityLabel>
       )}
     </group>
   );
