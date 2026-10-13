@@ -37,7 +37,7 @@ export function assignDepartmentsToFloors(departments: Department[], floorCount:
   if (floorCount <= 0) return [];
   if (departments.length === 0) return Array.from({ length: floorCount }, () => []);
   if (departments.length <= floorCount)
-    return Array.from({ length: floorCount }, (_, i) => [departments[Math.floor((i * departments.length) / floorCount)]]);
+    return Array.from({ length: floorCount }, (_, i) => [departments[Math.floor((i * departments.length) / floorCount)]!]);
   const per = Math.ceil(departments.length / floorCount);
   return Array.from({ length: floorCount }, (_, i) => departments.slice(i * per, i * per + per));
 }

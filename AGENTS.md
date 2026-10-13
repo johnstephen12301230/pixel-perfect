@@ -17,3 +17,5 @@
 - Camera motion is owned by CityCameraRig; disable orbit updates and drain damping during tokenized transitions, then restore controls only on completion. Why: focus, return, and rapid re-selection must never fight user orbit input or finish stale transitions.
 - ProjectDetailsPanel is a DOM overlay on /projects backed by the existing project registry. Why: details stay accessible and Portfolio remains free of WebGL.
 - In-world labels use CityLabel DOM roots with deferred cleanup. Why: avoid synchronous DOM-root unmount inside the 3D renderer during selection and route cleanup.
+- Interiors are generated from project data by src/utils/interiorLayout.ts (blocks, departments, per-zone workstations/waypoints/spawn points) and mounted only for the selected building. Why: one source of truth for exteriors, interiors, and future employees.
+- The cutaway is driven by a per-building reveal ref (no React state per frame); facade walls fade only while facing the camera, roofs lift and fade. Why: readable from any orbit angle without re-renders.
