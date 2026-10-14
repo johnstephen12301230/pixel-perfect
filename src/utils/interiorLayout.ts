@@ -90,7 +90,7 @@ export function layoutZone(r: Rect, withMeeting: boolean): ZoneLayout {
   const x0 = r.x0 + (W - (cols - 1) * PITCH) / 2;
   for (let row = 0; row < rows; row++) {
     const z = deskStart + 0.11 + row * PITCH;
-    for (let c = 0; c < cols; c++) workstations.push({ desk: [x0 + c * PITCH, z], seat: [x0 + c * PITCH, z + 0.2], facing: Math.PI });
+    for (let c = 0; c < cols; c++) workstations.push({ desk: [x0 + c * PITCH, z], seat: [x0 + c * PITCH, z + 0.17], facing: Math.PI });
     const walk = z + 0.4;
     if (walk < r.z1 - 0.05) waypoints.push([r.x0 + 0.15, walk], [r.x1 - 0.15, walk]);
   }
