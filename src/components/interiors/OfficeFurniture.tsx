@@ -20,7 +20,7 @@ export function OfficeDesk({ items }: { items: Placed[] }) {
   return <><Kit items={items} size={[0.44, 0.03, 0.22]} offsetY={0.18} color="#f4efe7" /><Kit items={items} size={[0.4, 0.17, 0.02]} offsetY={0.085} offsetZ={-0.09} color="#c9ced4" /></>;
 }
 export function OfficeComputer({ items }: { items: Placed[] }) {
-  return <><Kit items={items} size={[0.2, 0.12, 0.015]} offsetY={0.27} offsetZ={-0.06} color="#1f2a37" metal={0.4} /><Kit items={items} size={[0.14, 0.008, 0.05]} offsetY={0.2} offsetZ={0.02} color="#dfe3e8" /></>;
+  return <><Kit items={items} size={[0.2, 0.12, 0.015]} offsetY={0.27} offsetZ={-0.06} color="#1f2a37" metal={0.4} /><Kit items={items} size={[0.14, 0.008, 0.05]} offsetY={0.2} offsetZ={0.06} color="#dfe3e8" /></>;
 }
 export function OfficeChair({ items }: { items: Placed[] }) {
   return <><Kit items={items} size={[0.13, 0.025, 0.13]} offsetY={0.11} color="#4a5866" /><Kit items={items} size={[0.13, 0.13, 0.02]} offsetY={0.19} offsetZ={0.065} color="#4a5866" /><Kit items={items} size={[0.025, 0.1, 0.025]} offsetY={0.05} color="#9aa5b1" metal={0.6} /></>;

@@ -8,7 +8,9 @@ import { CityCameraRig } from "./CityCameraRig";
 export function CityCanvas() {
   return (
     <Canvas shadows dpr={[1, 2]} className="!fixed inset-0" onPointerMissed={(event) => {
-      if (event.type === "click" && useCityStore.getState().selectedProjectId) useCityStore.getState().selectProject(null);
+      const s = useCityStore.getState();
+      if (event.type !== "click") return;
+      if (s.selectedWorkerId) s.selectWorker(null); else if (s.selectedProjectId) s.selectProject(null);
     }}>
       <CityCameraRig />
       <AdaptiveDpr pixelated={false} />
