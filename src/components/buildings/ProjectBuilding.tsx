@@ -181,7 +181,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         position={position}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = "pointer"; }}
         onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}
-        onClick={(e) => { e.stopPropagation(); if (e.delta <= 4) selectProject(project.id); }}
+        onClick={(e) => { e.stopPropagation(); if (e.delta > 4) return; useCityStore.getState().selectWorker(null); selectProject(project.id); }}
       >
         <mesh position={[0, 0.02, 0]} receiveShadow>
           <boxGeometry args={[5.8, 0.05, 5.8]} />

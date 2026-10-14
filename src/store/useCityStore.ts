@@ -12,6 +12,8 @@ interface CityState {
   interaction: InteractionState;
   selectedProjectId: string | null;
   selectedSlotId: string | null;
+  selectedWorkerId: string | null;
+  selectWorker: (id: string | null) => void;
   sidebarOpen: boolean;
   cameraResetToken: number;
   notice: string | null;
@@ -28,6 +30,8 @@ export const useCityStore = create<CityState>((set) => ({
   interaction: "city-overview",
   selectedProjectId: null,
   selectedSlotId: null,
+  selectedWorkerId: null,
+  selectWorker: (selectedWorkerId) => set({ selectedWorkerId }),
   sidebarOpen: false,
   cameraResetToken: 0,
   notice: null,
@@ -36,20 +40,21 @@ export const useCityStore = create<CityState>((set) => ({
     if (id && !PROJECTS.some((project) => project.id === id)) return;
     set((s) => {
       if (id === s.selectedProjectId) return s;
-      return { selectedProjectId: id, selectedSlotId: null, notice: null,
+      return { selectedProjectId: id, selectedSlotId: null, selectedWorkerId: null, notice: null,
         cameraResetToken: s.cameraResetToken + 1,
         interaction: id ? "focusing-building" : "returning-to-city" };
     });
   },
   selectSlot: (id) =>
-    set((s) => ({ selectedSlotId: id, selectedProjectId: null,
+    set((s) => ({ selectedSlotId: id, selectedProjectId: null, selectedWorkerId: null,
       cameraResetToken: s.cameraResetToken + 1,
       interaction: id ? "focusing-construction-slot" : "returning-to-city" })),
   resetCity: () =>
     set((s) => ({
       selectedProjectId: null,
       selectedSlotId: null,
-       interaction: "returning-to-city",
+      selectedWorkerId: null,
+      interaction: "returning-to-city",
       cameraResetToken: s.cameraResetToken + 1,
     })),
   notify: (notice) => set({ notice }),

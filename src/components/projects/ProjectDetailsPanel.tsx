@@ -17,7 +17,8 @@ export function ProjectDetailsPanel() {
     const previous = document.activeElement;
     panel.current?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !useCityStore.getState().sidebarOpen) back(null);
+      if (event.key !== "Escape" || useCityStore.getState().sidebarOpen) return;
+        if (useCityStore.getState().selectedWorkerId) useCityStore.getState().selectWorker(null); else back(null);
     };
     window.addEventListener("keydown", onKey);
     return () => {
