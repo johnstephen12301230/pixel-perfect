@@ -179,3 +179,12 @@ export function nextActivity(emp: TechnologyEmployee, stations: WorkerStation[],
   }
   return { stationId: currentId, state: "IDLE", duration: 3 + rnd() * 3, walkFirst: false };
 }
+
+/** Department whose floor opens by default: the one with the most employees (first on ties). */
+export function defaultFocusDepartment(employees: TechnologyEmployee[]): string | null {
+  const counts = new Map<string, number>();
+  for (const e of employees) counts.set(e.department.id, (counts.get(e.department.id) ?? 0) + 1);
+  let best: string | null = null, n = 0;
+  for (const [id, c] of counts) if (c > n) { best = id; n = c; }
+  return best;
+}

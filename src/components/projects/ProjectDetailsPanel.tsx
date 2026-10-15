@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ArrowLeft, ArrowUpRight, Building2, Check, Code2, Layers, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PROJECTS } from "@/data/projects";
 import { CITY_LOTS } from "@/data/cityLots";
 import { useCityStore } from "@/store/useCityStore";
+import { getInteriorPlan } from "@/utils/interiorLayout";
+import { defaultFocusDepartment, getEmployees } from "@/utils/workers";
 
 export function ProjectDetailsPanel() {
   const id = useCityStore((s) => s.selectedProjectId);
@@ -27,7 +29,11 @@ export function ProjectDetailsPanel() {
     };
   }, [id, back]);
 
+  const focused = useCityStore((s) => s.focusedDepartmentId);
+  const employees = useMemo(() => (project ? getEmployees(project, getInteriorPlan(project)) : []), [project]);
   if (!project) return null;
+  const activeDept = focused ?? defaultFocusDepartment(employees);
+  const depts = [...new Map(employees.map((e) => [e.department.id, e.department])).values()];
   const lot = CITY_LOTS.find((item) => item.id === project.lotId);
   return (
     <aside ref={panel} tabIndex={-1} aria-labelledby="project-title" aria-busy={interaction === "focusing-building"}
@@ -51,6 +57,17 @@ export function ProjectDetailsPanel() {
         <section className="mt-6 border-t border-glass-border pt-5">
           <h3 className="text-sm font-semibold">Features</h3>
           <ul className="mt-3 space-y-2.5">{project.features.map((feature) => <li key={feature} className="flex gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{feature}</li>)}</ul>
+        </section>
+        <section className="mt-6 border-t border-glass-border pt-5">
+          <h3 className="text-sm font-semibold">Inside the building</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Open a department floor to see its team at work. Click an employee to learn about them.</p>
+          <div className="mt-3 flex flex-wrap gap-2">{depts.map((d) => (
+            <button key={d.id} type="button" aria-pressed={activeDept === d.id} onClick={() => useCityStore.getState().focusDepartment(d.id)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${activeDept === d.id ? "border-primary bg-glass-strong" : "border-glass-border hover:bg-glass-strong"}`}>
+              <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />{d.name}
+              <span className="text-muted-foreground">· {employees.filter((e) => e.department.id === d.id).map((e) => e.technology).join(", ")}</span>
+            </button>
+          ))}</div>
         </section>
         <section className="mt-6 border-t border-glass-border pt-5">
           <h3 className="text-sm font-semibold">Departments</h3>

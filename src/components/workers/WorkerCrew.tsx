@@ -4,11 +4,11 @@ import { StationRegistry, getZoneStations, initialActivity, seeded, type Technol
 import { TechWorker } from "./TechWorker";
 
 /** Workers for one building block. Mounted only while the selected building is inspected. */
-export function WorkerCrew({ plan, blockIndex, employees }: { plan: BlockPlan; blockIndex: number; employees: TechnologyEmployee[] }) {
+export function WorkerCrew({ plan, blockIndex, level, employees }: { plan: BlockPlan; blockIndex: number; level: number; employees: TechnologyEmployee[] }) {
   const crew = useMemo(() => {
     const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const zones = new Map<string, { stations: ReturnType<typeof getZoneStations>; registry: StationRegistry }>();
-    return employees.filter((e) => e.blockIndex === blockIndex).map((emp) => {
+    return employees.filter((e) => e.blockIndex === blockIndex && e.floorLevel === level).map((emp) => {
       let z = zones.get(emp.zoneKey);
       if (!z) {
         const [, f, zi] = emp.zoneKey.split("-").map(Number);
@@ -18,7 +18,7 @@ export function WorkerCrew({ plan, blockIndex, employees }: { plan: BlockPlan; b
       const rnd = seeded(emp.id);
       return { emp, ...z, rnd, reduced, first: initialActivity(emp, z.stations, z.registry, rnd, reduced) };
     });
-  }, [plan, blockIndex, employees]);
+  }, [plan, blockIndex, level, employees]);
   return <>{crew.map((c) => (
     <TechWorker key={c.emp.id} employee={c.emp} stations={c.stations} registry={c.registry} rnd={c.rnd} first={c.first} reduced={c.reduced} index={c.emp.order} />
   ))}</>;
