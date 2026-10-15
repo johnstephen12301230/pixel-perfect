@@ -3,6 +3,8 @@ import { CityLabel } from "@/components/city/CityLabel";
 import { useCityStore } from "@/store/useCityStore";
 import type { Department, FloorPlan, MeetingRoom, PresentationSpot, Rect } from "@/utils/interiorLayout";
 import type { BlockPlan } from "@/utils/interiorLayout";
+import type { TechnologyEmployee } from "@/utils/workers";
+import { WorkerCrew } from "@/components/workers/WorkerCrew";
 import { Glass, OfficeChair, OfficeComputer, OfficeDesk, OfficePlant, Solid, type Placed } from "./OfficeFurniture";
 
 const PART_H = 0.4;
@@ -70,7 +72,7 @@ export function OfficeFloor({ floor }: { floor: FloorPlan }) {
 }
 
 /** Detailed office interior for one building block; mounted only for the selected building. */
-export function BuildingInterior({ plan }: { plan: BlockPlan }) {
+export function BuildingInterior({ plan, blockIndex = 0, employees = [] }: { plan: BlockPlan; blockIndex?: number; employees?: TechnologyEmployee[] }) {
   const showLabels = useCityStore((s) => s.interaction === "inspecting-building");
   const kits = useMemo(() => {
     const desks: Placed[] = [], chairs: Placed[] = [], plants: Placed[] = [];
@@ -89,6 +91,7 @@ export function BuildingInterior({ plan }: { plan: BlockPlan }) {
       <OfficeComputer items={kits.desks} />
       <OfficeChair items={kits.chairs} />
       <OfficePlant items={kits.plants} />
+      {showLabels && <WorkerCrew plan={plan} blockIndex={blockIndex} employees={employees} />}
       {showLabels && plan.floors.flatMap((floor) => floor.zones.filter((z) => z.entry && z.department).map((zone, i) => (
         <DepartmentLabel key={`${floor.level}-${i}`} department={zone.department!} position={[(zone.rect.x0 + zone.rect.x1) / 2, floor.y + 0.5, hz]} />
       )))}

@@ -5,6 +5,8 @@ import { CityLabel } from "@/components/city/CityLabel";
 import { BuildingInterior } from "@/components/interiors/BuildingInterior";
 import type { Project } from "@/types/project";
 import { useCityStore } from "@/store/useCityStore";
+import { getEmployees } from "@/utils/workers";
+import type { TechnologyEmployee } from "@/utils/workers";
 import { FLOOR_H, getBuildingBlocks, getInteriorPlan, type BlockPlan } from "@/utils/interiorLayout";
 
 const GLASS = { color: "#b9d8ee", metalness: 0.55, roughness: 0.08, envMapIntensity: 1.4 } as const;
@@ -67,7 +69,7 @@ function RoofReveal({ children, lift = 0.5 }: { children: ReactNode; lift?: numb
   return <group ref={group}>{children}</group>;
 }
 
-function GlassBlock({ w, d, floors, accent, highlight, plan }: { w: number; d: number; floors: number; accent: string; highlight: boolean; plan: BlockPlan | null }) {
+function GlassBlock({ w, d, floors, accent, highlight, plan, blockIndex, employees }: { w: number; d: number; floors: number; accent: string; highlight: boolean; plan: BlockPlan | null; blockIndex: number; employees: TechnologyEmployee[] }) {
   const h = floors * FLOOR_H;
   const hl = { color: accent, on: highlight };
   return (
@@ -95,7 +97,7 @@ function GlassBlock({ w, d, floors, accent, highlight, plan }: { w: number; d: n
           <meshStandardMaterial color={FRAME} />
         </mesh>
       )))}
-      {plan && <BuildingInterior plan={plan} />}
+      {plan && <BuildingInterior plan={plan} blockIndex={blockIndex} employees={employees} />}
     </group>
   );
 }
@@ -125,6 +127,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
 
   const blocks = useMemo(() => getBuildingBlocks(project), [project]);
   const plans = useMemo(() => (interior ? getInteriorPlan(project) : null), [interior, project]);
+  const employees = useMemo(() => (plans ? getEmployees(project, plans) : []), [plans, project]);
   const { accentColor: a, floors } = project;
 
   let extras: ReactNode = null;
@@ -189,7 +192,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         </mesh>
         {blocks.map((b, i) => (
           <group key={i} position={b.offset}>
-            <GlassBlock w={b.w} d={b.d} floors={b.floors} accent={a} highlight={hl} plan={plans?.[i] ?? null} />
+            <GlassBlock w={b.w} d={b.d} floors={b.floors} accent={a} highlight={hl} plan={plans?.[i] ?? null} blockIndex={i} employees={employees} />
           </group>
         ))}
         {extras}
