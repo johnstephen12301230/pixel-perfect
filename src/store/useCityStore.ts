@@ -13,6 +13,8 @@ interface CityState {
   selectedProjectId: string | null;
   selectedSlotId: string | null;
   selectedWorkerId: string | null;
+  focusedDepartmentId: string | null;
+  focusDepartment: (id: string | null) => void;
   selectWorker: (id: string | null) => void;
   sidebarOpen: boolean;
   cameraResetToken: number;
@@ -31,6 +33,8 @@ export const useCityStore = create<CityState>((set) => ({
   selectedProjectId: null,
   selectedSlotId: null,
   selectedWorkerId: null,
+  focusedDepartmentId: null,
+  focusDepartment: (focusedDepartmentId) => set({ focusedDepartmentId, selectedWorkerId: null }),
   selectWorker: (selectedWorkerId) => set({ selectedWorkerId }),
   sidebarOpen: false,
   cameraResetToken: 0,
@@ -46,7 +50,7 @@ export const useCityStore = create<CityState>((set) => ({
     });
   },
   selectSlot: (id) =>
-    set((s) => ({ selectedSlotId: id, selectedProjectId: null, selectedWorkerId: null,
+    set((s) => ({ selectedSlotId: id, selectedProjectId: null, selectedWorkerId: null, focusedDepartmentId: null,
       cameraResetToken: s.cameraResetToken + 1,
       interaction: id ? "focusing-construction-slot" : "returning-to-city" })),
   resetCity: () =>
@@ -54,6 +58,7 @@ export const useCityStore = create<CityState>((set) => ({
       selectedProjectId: null,
       selectedSlotId: null,
       selectedWorkerId: null,
+      focusedDepartmentId: null,
       interaction: "returning-to-city",
       cameraResetToken: s.cameraResetToken + 1,
     })),

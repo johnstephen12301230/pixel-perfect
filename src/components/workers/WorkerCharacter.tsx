@@ -32,7 +32,7 @@ const cache = new Map<string, MeshStandardMaterial>();
 export function mat(color: string, emissive = false) {
   const key = `${color}${emissive}`;
   let m = cache.get(key);
-  if (!m) { m = new MeshStandardMaterial({ color, roughness: 0.7, ...(emissive ? { emissive: color, emissiveIntensity: 0.7 } : {}) }); cache.set(key, m); }
+  if (!m) { m = new MeshStandardMaterial({ color, roughness: 0.7, ...(emissive ? { emissive: color, emissiveIntensity: 0.7 } : {}) }); m.userData.shared = true; cache.set(key, m); }
   return m;
 }
 const SKIN = ["#e9c4a2", "#c9966f", "#8d5d3f", "#f1d3b8"];
