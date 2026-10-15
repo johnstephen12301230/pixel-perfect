@@ -2,10 +2,10 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type M
 import { useFrame } from "@react-three/fiber";
 import { Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
 import { CityLabel } from "@/components/city/CityLabel";
-import { BuildingInterior } from "@/components/interiors/BuildingInterior";
+import { StoreyInterior } from "@/components/interiors/BuildingInterior";
 import type { Project } from "@/types/project";
 import { useCityStore } from "@/store/useCityStore";
-import { getEmployees } from "@/utils/workers";
+import { defaultFocusDepartment, getEmployees } from "@/utils/workers";
 import type { TechnologyEmployee } from "@/utils/workers";
 import { FLOOR_H, getBuildingBlocks, getInteriorPlan, type BlockPlan } from "@/utils/interiorLayout";
 
@@ -25,10 +25,11 @@ function setOpacity(mat: MeshStandardMaterial, opacity: number) {
 /** Facade wall that fades only while it faces the camera, so any inspection angle stays readable. */
 function FadeWall({ position, size, normal, accent, highlight }: { position: [number, number, number]; size: [number, number, number]; normal: [number, number, number]; accent?: string; highlight: { color: string; on: boolean } }) {
   const reveal = useContext(RevealCtx);
+  const storey = useContext(StoreyCtx);
   const fade = useRef(0);
   const n = useMemo(() => new Vector3(...normal), [normal]);
-  const glass = useMemo(() => new MeshStandardMaterial({ ...GLASS, transparent: true }), []);
-  const stripe = useMemo(() => (accent ? new MeshStandardMaterial({ color: accent, transparent: true }) : null), [accent]);
+  const glass = useMemo(() => { const m = new MeshStandardMaterial({ ...GLASS, transparent: true }); m.userData.facade = true; return m; }, []);
+  const stripe = useMemo(() => { if (!accent) return null; const m = new MeshStandardMaterial({ color: accent, transparent: true }); m.userData.facade = true; return m; }, [accent]);
   useEffect(() => { glass.emissive.set(highlight.color); glass.emissiveIntensity = highlight.on ? 0.18 : 0; }, [glass, highlight.color, highlight.on]);
   useEffect(() => () => { glass.dispose(); stripe?.dispose(); }, [glass, stripe]);
   useFrame(({ camera }, dt) => {
@@ -38,8 +39,9 @@ function FadeWall({ position, size, normal, accent, highlight }: { position: [nu
     const goal = reveal.current * facing;
     fade.current += (goal - fade.current) * (1 - Math.exp(-8 * Math.min(dt, 0.05)));
     if (Math.abs(goal - fade.current) < 0.002) fade.current = goal;
-    setOpacity(glass, 1 - fade.current * (1 - WALL_FADED));
-    if (stripe) setOpacity(stripe, 1 - fade.current);
+    const keep = 1 - storey.current;
+    setOpacity(glass, (1 - fade.current * (1 - WALL_FADED)) * keep);
+    if (stripe) setOpacity(stripe, (1 - fade.current) * keep);
   });
   return (
     <group position={position}>
@@ -69,35 +71,74 @@ function RoofReveal({ children, lift = 0.5 }: { children: ReactNode; lift?: numb
   return <group ref={group}>{children}</group>;
 }
 
-function GlassBlock({ w, d, floors, accent, highlight, plan, blockIndex, employees }: { w: number; d: number; floors: number; accent: string; highlight: boolean; plan: BlockPlan | null; blockIndex: number; employees: TechnologyEmployee[] }) {
-  const h = floors * FLOOR_H;
+/** Hide progress (0 visible → 1 lifted away) of the storey a mesh belongs to. */
+const StoreyCtx = createContext<MutableRefObject<number>>({ current: 0 });
+
+/** One storey: slab, facade segment, posts, and its interior. Storeys above the focused floor lift and fade. */
+function Storey({ level, hidden, children }: { level: number; hidden: boolean; children: ReactNode }) {
+  const hide = useRef(0);
+  const group = useRef<Group>(null);
+  useFrame((_, dt) => {
+    const goal = hidden ? 1 : 0;
+    const g = group.current;
+    if (!g || (goal === hide.current && g.userData.settled)) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    hide.current = reduced ? goal : hide.current + (goal - hide.current) * (1 - Math.exp(-6 * Math.min(dt, 0.05)));
+    if (Math.abs(goal - hide.current) < 0.003) hide.current = goal;
+    g.userData.settled = hide.current === goal;
+    g.position.y = level * FLOOR_H + hide.current * 1.2;
+    g.visible = hide.current < 0.99;
+    g.traverse((o) => {
+      if (!(o instanceof Mesh)) return;
+      const m = o.material as MeshStandardMaterial;
+      if (!m || m.userData.shared || m.userData.facade) return;
+      if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity;
+      m.transparent = true;
+      setOpacity(m, m.userData.baseOpacity * (1 - hide.current));
+    });
+  });
+  return <StoreyCtx.Provider value={hide}><group ref={group} position={[0, level * FLOOR_H, 0]}>{children}</group></StoreyCtx.Provider>;
+}
+
+function GlassBlock({ w, d, floors, baseY, cutY, live, accent, highlight, plan, blockIndex, employees }: { w: number; d: number; floors: number; baseY: number; cutY: number; live: boolean; accent: string; highlight: boolean; plan: BlockPlan | null; blockIndex: number; employees: TechnologyEmployee[] }) {
+  const H = FLOOR_H;
   const hl = { color: accent, on: highlight };
   return (
     <group>
-      <FadeWall position={[0, h / 2, d / 2]} size={[w, h, 0.04]} normal={[0, 0, 1]} accent={accent} highlight={hl} />
-      <FadeWall position={[0, h / 2, -d / 2]} size={[w, h, 0.04]} normal={[0, 0, -1]} highlight={hl} />
-      <FadeWall position={[w / 2, h / 2, 0]} size={[0.04, h, d]} normal={[1, 0, 0]} highlight={hl} />
-      <FadeWall position={[-w / 2, h / 2, 0]} size={[0.04, h, d]} normal={[-1, 0, 0]} highlight={hl} />
-      {/* Floor slabs (interior floors) */}
-      {Array.from({ length: floors }, (_, i) => (
-        <mesh key={i} position={[0, i * FLOOR_H, 0]} receiveShadow>
-          <boxGeometry args={[w + 0.06, 0.08, d + 0.06]} />
-          <meshStandardMaterial color={FRAME} roughness={0.5} />
-        </mesh>
-      ))}
-      <RoofReveal lift={0.4}>
-        <mesh position={[0, h, 0]} castShadow>
-          <boxGeometry args={[w + 0.06, 0.08, d + 0.06]} />
-          <meshStandardMaterial color={FRAME} roughness={0.5} />
-        </mesh>
-      </RoofReveal>
-      {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
-        <mesh key={`${sx}${sz}`} position={[(sx * w) / 2, h / 2, (sz * d) / 2]}>
-          <boxGeometry args={[0.12, h, 0.12]} />
-          <meshStandardMaterial color={FRAME} />
-        </mesh>
-      )))}
-      {plan && <BuildingInterior plan={plan} blockIndex={blockIndex} employees={employees} />}
+      {Array.from({ length: floors }, (_, level) => {
+        const hidden = baseY + level * H >= cutY - 0.01;
+        return (
+          <Storey key={level} level={level} hidden={hidden}>
+            <mesh receiveShadow>
+              <boxGeometry args={[w + 0.06, 0.08, d + 0.06]} />
+              <meshStandardMaterial color={FRAME} roughness={0.5} />
+            </mesh>
+            <FadeWall position={[0, H / 2, d / 2]} size={[w, H, 0.04]} normal={[0, 0, 1]} accent={accent} highlight={hl} />
+            <FadeWall position={[0, H / 2, -d / 2]} size={[w, H, 0.04]} normal={[0, 0, -1]} highlight={hl} />
+            <FadeWall position={[w / 2, H / 2, 0]} size={[0.04, H, d]} normal={[1, 0, 0]} highlight={hl} />
+            <FadeWall position={[-w / 2, H / 2, 0]} size={[0.04, H, d]} normal={[-1, 0, 0]} highlight={hl} />
+            {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
+              <mesh key={`${sx}${sz}`} position={[(sx * w) / 2, H / 2, (sz * d) / 2]}>
+                <boxGeometry args={[0.12, H, 0.12]} />
+                <meshStandardMaterial color={FRAME} />
+              </mesh>
+            )))}
+            {level === floors - 1 && (
+              <RoofReveal lift={0.4}>
+                <mesh position={[0, H, 0]} castShadow>
+                  <boxGeometry args={[w + 0.06, 0.08, d + 0.06]} />
+                  <meshStandardMaterial color={FRAME} roughness={0.5} />
+                </mesh>
+              </RoofReveal>
+            )}
+            {plan && (
+              <group position={[0, -level * H, 0]}>
+                <StoreyInterior plan={plan} level={level} blockIndex={blockIndex} employees={employees} live={live && !hidden} />
+              </group>
+            )}
+          </Storey>
+        );
+      })}
     </group>
   );
 }
@@ -128,6 +169,10 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
   const blocks = useMemo(() => getBuildingBlocks(project), [project]);
   const plans = useMemo(() => (interior ? getInteriorPlan(project) : null), [interior, project]);
   const employees = useMemo(() => (plans ? getEmployees(project, plans) : []), [plans, project]);
+  const inspecting = useCityStore((s) => s.selectedProjectId === project.id && s.interaction === "inspecting-building");
+  const focusId = useCityStore((s) => s.focusedDepartmentId) ?? defaultFocusDepartment(employees);
+  const focusEmp = employees.find((e) => e.department.id === focusId);
+  const cutY = inspecting && focusEmp ? blocks[focusEmp.blockIndex]!.offset[1] + (focusEmp.floorLevel + 1) * FLOOR_H : Infinity;
   const { accentColor: a, floors } = project;
 
   let extras: ReactNode = null;
@@ -192,7 +237,7 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
         </mesh>
         {blocks.map((b, i) => (
           <group key={i} position={b.offset}>
-            <GlassBlock w={b.w} d={b.d} floors={b.floors} accent={a} highlight={hl} plan={plans?.[i] ?? null} blockIndex={i} employees={employees} />
+            <GlassBlock w={b.w} d={b.d} floors={b.floors} baseY={b.offset[1]} cutY={cutY} live={inspecting} accent={a} highlight={hl} plan={plans?.[i] ?? null} blockIndex={i} employees={employees} />
           </group>
         ))}
         {extras}
