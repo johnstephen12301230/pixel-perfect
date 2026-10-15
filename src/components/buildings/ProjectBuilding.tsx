@@ -28,8 +28,8 @@ function FadeWall({ position, size, normal, accent, highlight }: { position: [nu
   const storey = useContext(StoreyCtx);
   const fade = useRef(0);
   const n = useMemo(() => new Vector3(...normal), [normal]);
-  const glass = useMemo(() => { const m = new MeshStandardMaterial({ ...GLASS, transparent: true }); m.userData.facade = true; return m; }, []);
-  const stripe = useMemo(() => { if (!accent) return null; const m = new MeshStandardMaterial({ color: accent, transparent: true }); m.userData.facade = true; return m; }, [accent]);
+  const glass = useMemo(() => { const m = new MeshStandardMaterial({ ...GLASS, transparent: true }); m.userData["facade"] = true; return m; }, []);
+  const stripe = useMemo(() => { if (!accent) return null; const m = new MeshStandardMaterial({ color: accent, transparent: true }); m.userData["facade"] = true; return m; }, [accent]);
   useEffect(() => { glass.emissive.set(highlight.color); glass.emissiveIntensity = highlight.on ? 0.18 : 0; }, [glass, highlight.color, highlight.on]);
   useEffect(() => () => { glass.dispose(); stripe?.dispose(); }, [glass, stripe]);
   useFrame(({ camera }, dt) => {
@@ -81,20 +81,20 @@ function Storey({ level, hidden, children }: { level: number; hidden: boolean; c
   useFrame((_, dt) => {
     const goal = hidden ? 1 : 0;
     const g = group.current;
-    if (!g || (goal === hide.current && g.userData.settled)) return;
+    if (!g || (goal === hide.current && g.userData["settled"])) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     hide.current = reduced ? goal : hide.current + (goal - hide.current) * (1 - Math.exp(-6 * Math.min(dt, 0.05)));
     if (Math.abs(goal - hide.current) < 0.003) hide.current = goal;
-    g.userData.settled = hide.current === goal;
+    g.userData["settled"] = hide.current === goal;
     g.position.y = level * FLOOR_H + hide.current * 1.2;
     g.visible = hide.current < 0.99;
     g.traverse((o) => {
       if (!(o instanceof Mesh)) return;
       const m = o.material as MeshStandardMaterial;
-      if (!m || m.userData.shared || m.userData.facade) return;
-      if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity;
+      if (!m || m.userData["shared"] || m.userData["facade"]) return;
+      if (m.userData["baseOpacity"] === undefined) m.userData["baseOpacity"] = m.opacity;
       m.transparent = true;
-      setOpacity(m, m.userData.baseOpacity * (1 - hide.current));
+      setOpacity(m, m.userData["baseOpacity"] * (1 - hide.current));
     });
   });
   return <StoreyCtx.Provider value={hide}><group ref={group} position={[0, level * FLOOR_H, 0]}>{children}</group></StoreyCtx.Provider>;

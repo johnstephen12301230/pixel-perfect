@@ -22,7 +22,7 @@ export function MeetingRoomArea({ room, y }: { room: MeetingRoom; y: number }) {
   );
 }
 
-export function PresentationArea({ spot, y, caption }: { spot: PresentationSpot; y: number; caption?: string }) {
+export function PresentationArea({ spot, y, caption }: { spot: PresentationSpot; y: number; caption?: string | undefined }) {
   return (
     <group>
       <Solid position={[spot.screen[0], y + 0.32, spot.screen[1]]} size={[spot.width, 0.24, 0.02]} color="#1f2a37" />
