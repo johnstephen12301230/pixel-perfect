@@ -19,3 +19,5 @@
 - In-world labels use CityLabel DOM roots with deferred cleanup. Why: avoid synchronous DOM-root unmount inside the 3D renderer during selection and route cleanup.
 - Interiors are generated from project data by src/utils/interiorLayout.ts (blocks, departments, per-zone workstations/waypoints/spawn points) and mounted only for the selected building. Why: one source of truth for exteriors, interiors, and future employees.
 - The cutaway is driven by a per-building reveal ref (no React state per frame); facade walls fade only while facing the camera, roofs lift and fade. Why: readable from any orbit angle without re-renders.
+- Employees come from src/utils/workers.ts (one per technology, stations from the Phase 3 zone layout, seeded scheduler with exclusive station reservations); each TechWorker owns a WorkerAnimationController in a ref and never writes store state per frame. Why: deterministic, collision-free activity without React re-renders.
+- Storeys are separate groups; storeys above the focused department floor lift and fade during inspection. Why: lower floors are otherwise covered by the slabs above in the isometric view.
