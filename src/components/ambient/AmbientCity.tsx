@@ -190,7 +190,7 @@ export function AmbientCity() {
           return (
             <group key={`${cw.id}${end}`} position={pos}>
               <mesh position={[0, 0.22, 0]} geometry={unitBox} scale={[0.04, 0.44, 0.04]} raycast={noRaycast}><meshStandardMaterial color="#6b7785" /></mesh>
-              <mesh position={[0, 0.46, 0]} geometry={unitBox} scale={[0.09, 0.09, 0.09]} material={signals[i]} raycast={noRaycast} />
+              <mesh position={[0, 0.46, 0]} geometry={unitBox} scale={[0.09, 0.09, 0.09]} material={signals[i]!} raycast={noRaycast} />
             </group>
           );
         });
