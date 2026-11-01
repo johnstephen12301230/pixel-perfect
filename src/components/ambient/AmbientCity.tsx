@@ -15,7 +15,7 @@ import { Bench } from "@/components/city/Props";
  */
 const SEG = 0.065;
 const PED_PARTS = 15;
-const CAR_BOXES = 12;
+const CAR_BOXES = 13;
 const noRaycast = () => {};
 
 const unitBox = new BoxGeometry(1, 1, 1);
@@ -114,8 +114,7 @@ function writeCar(boxes: InstancedMesh, wheels: InstancedMesh, i: number, c: Veh
     tmp.compose(v.set(0, 0, 0), q.setFromEuler(e.set(0, 0, Math.PI / 2)), sc.set(WHEEL_R, WHEEL_W, WHEEL_R));
     wheels.setMatrixAt(i * 4 + k, out.multiplyMatrices(spun, tmp));
     // A light hub bar on the outer face makes the rotation visible.
-    part(boxes, i * CAR_BOXES + 9 + Math.min(k, 2), spun, sx * (WHEEL_W / 2 + 0.004), 0, 0, 0.008, WHEEL_R * 1.5, 0.03);
-    if (k === 3) part(boxes, i * CAR_BOXES + 11, spun, sx * (WHEEL_W / 2 + 0.004), 0, 0, 0.008, WHEEL_R * 1.5, 0.03);
+    part(boxes, i * CAR_BOXES + 9 + k, spun, sx * (WHEEL_W / 2 + 0.004), 0, 0, 0.008, WHEEL_R * 1.5, 0.03);
   });
 }
 
