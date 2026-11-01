@@ -1,5 +1,9 @@
-import { LOT_PITCH, ROAD_WIDTH } from "@/data/cityLots";
+import { CITY_LOTS, LOT_PITCH, ROAD_WIDTH } from "@/data/cityLots";
+import { PROJECTS } from "@/data/projects";
+import { buildPedestrianGraph } from "@/utils/cityRoutes";
 import { Streetlight } from "./Props";
+
+const CROSSWALKS = buildPedestrianGraph(CITY_LOTS, PROJECTS).crosswalks;
 
 const EXTENT = 56;
 const ROAD_LINES = [-LOT_PITCH, 0, LOT_PITCH];
@@ -35,20 +39,19 @@ export function CityRoads() {
           )}
         </group>
       ))}
-      {/* Crosswalks at central intersection */}
-      {[-1, 1].flatMap((s) =>
-        Array.from({ length: 5 }, (_, i) => (
-          <group key={`${s}-${i}`}>
-            <mesh position={[-1.6 + i * 0.8, 0.025, s * 2.6]} rotation-x={-Math.PI / 2}>
-              <planeGeometry args={[0.45, 1.1]} />
+      {/* Crosswalks come from the shared route registry so walkers and drawings always match. */}
+      {CROSSWALKS.flatMap((cw) =>
+        Array.from({ length: 5 }, (_, i) => {
+          const t = -1.6 + i * 0.8;
+          const x = cw.axis === "x" ? cw.center[0] + t : cw.center[0];
+          const z = cw.axis === "x" ? cw.center[1] : cw.center[1] + t;
+          return (
+            <mesh key={`${cw.id}-${i}`} position={[x, 0.025, z]} rotation-x={-Math.PI / 2}>
+              <planeGeometry args={cw.axis === "x" ? [0.45, 1.1] : [1.1, 0.45]} />
               <meshStandardMaterial color="#ffffff" />
             </mesh>
-            <mesh position={[s * 2.6, 0.025, -1.6 + i * 0.8]} rotation-x={-Math.PI / 2}>
-              <planeGeometry args={[1.1, 0.45]} />
-              <meshStandardMaterial color="#ffffff" />
-            </mesh>
-          </group>
-        )),
+          );
+        }),
       )}
       {/* Streetlights on intersection corners */}
       {ROAD_LINES.flatMap((x) =>
