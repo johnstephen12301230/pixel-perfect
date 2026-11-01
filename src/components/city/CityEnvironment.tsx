@@ -3,6 +3,7 @@ import { CITY_LOTS } from "@/data/cityLots";
 import { PROJECTS } from "@/data/projects";
 import { getNextAvailableSlot } from "@/utils/cityLayout";
 import { CityRoads } from "./CityRoads";
+import { AmbientCity } from "@/components/ambient/AmbientCity";
 import { DevelopmentLot } from "./DevelopmentLot";
 
 export function CityEnvironment() {
@@ -19,6 +20,7 @@ export function CityEnvironment() {
         <meshStandardMaterial color="#9fb2c3" roughness={0.6} />
       </mesh>
       <CityRoads />
+      <AmbientCity />
       {CITY_LOTS.map((lot) => (
         <DevelopmentLot key={lot.id} lot={lot} projects={PROJECTS} nextSlotId={nextSlotId} />
       ))}
