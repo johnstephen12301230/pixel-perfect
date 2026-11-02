@@ -2,20 +2,19 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, Plus } from "lucide-react";
 import { useCityStore } from "@/store/useCityStore";
 import { CITY_LOTS } from "@/data/cityLots";
-import { PROJECTS } from "@/data/projects";
+import { getProjects } from "@/store/useProjectRegistry";
 import { getNextAvailableSlot } from "@/utils/cityLayout";
 import { NavigationToggle } from "./NavigationToggle";
 
 export function AppHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isProjects = !pathname.startsWith("/portfolio");
-  const { setSidebarOpen, selectSlot, notify } = useCityStore();
+  const { setSidebarOpen, openBuilder, notify } = useCityStore();
 
   const onBuild = () => {
-    const next = getNextAvailableSlot(CITY_LOTS, PROJECTS);
-    if (!next) return notify("The district is full — new lots arrive with city expansion.");
-    selectSlot(next.slot.id);
-    notify(`Next construction slot: ${next.lot.name}. The Build form arrives in a later phase.`);
+    const next = getNextAvailableSlot(CITY_LOTS, getProjects());
+    if (!next) return notify("Every building slot is taken. New lots arrive with city expansion.");
+    openBuilder(next.slot.id);
   };
 
   return (

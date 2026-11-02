@@ -3,7 +3,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { OrthographicCamera as ThreeCamera, Vector3 } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { PROJECTS } from "@/data/projects";
+import { findProject } from "@/store/useProjectRegistry";
+import { CITY_LOTS } from "@/data/cityLots";
+
+function slotFocusTarget(slotId: string): [number, number, number] | null {
+  const lot = CITY_LOTS.find((l) => l.slots.some((s) => s.id === slotId));
+  const slot = lot?.slots.find((s) => s.id === slotId);
+  return lot && slot ? [lot.position[0] + slot.offset[0], 2, lot.position[1] + slot.offset[1]] : null;
+}
 import { useCityStore } from "@/store/useCityStore";
 import { cameraBlend, getBuildingCenter, getFocusFraming } from "@/utils/cameraFocus";
 
@@ -35,17 +42,18 @@ export function CityCameraRig() {
       orbit.enabled = false;
       orbit.enableDamping = false;
       orbit.update();
-      const project = PROJECTS.find((p) => p.id === state.selectedProjectId);
-      const center = project ? getBuildingCenter(project) : null;
-      if (project && center) {
+      const project = findProject(state.selectedProjectId);
+      const slotTarget = !project && state.selectedSlotId ? slotFocusTarget(state.selectedSlotId) : null;
+      const center = project ? getBuildingCenter(project) : slotTarget;
+      if (center) {
         if (!overview.current) overview.current = { position: camera.position.clone(), target: orbit.target.clone(), zoom: camera.zoom };
-        const framing = getFocusFraming(size.width, size.height, project.floors);
+        const framing = getFocusFraming(size.width, size.height, project?.floors ?? 5);
         const target = new Vector3(...center);
         const right = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
         const up = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
         target.addScaledVector(right, framing.shiftX).addScaledVector(up, framing.shiftY);
         destination.current = { target, position: target.clone().add(new Vector3(40, 38, 40)), zoom: framing.zoom };
-        if (resized) useCityStore.setState({ interaction: "focusing-building" });
+        if (resized && project) useCityStore.setState({ interaction: "focusing-building" });
       } else {
         const initial = { position: new Vector3(40, 38, 40), target: new Vector3(), zoom: size.width < 640 ? 11 : 19 };
         destination.current = overview.current ?? initial;
