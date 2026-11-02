@@ -8,7 +8,7 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
   const plus = useRef<THREE.Group>(null);
   const [hover, setHover] = useState(false);
   const selected = useCityStore((s) => s.selectedSlotId === slotId);
-  const { selectSlot, notify } = useCityStore();
+  const openBuilder = useCityStore((s) => s.openBuilder);
 
   useFrame((state) => {
     if (!plus.current) return;
@@ -25,8 +25,8 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
       onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}
       onClick={(e) => {
         e.stopPropagation();
-        selectSlot(slotId);
-        notify("Construction slot selected. The Build form arrives in a later phase.");
+        if (e.delta > 4) return;
+        openBuilder(slotId);
       }}
     >
       {/* Foundation */}
@@ -59,11 +59,11 @@ export function VacantBuildMarker({ slotId, position }: { slotId: string; positi
           <meshStandardMaterial color="#2f7cf6" metalness={0.3} roughness={0.2} />
         </mesh>
       </group>
-      <CityLabel position={[0, 3.4, 0]}>
+      {(active || selected) && <CityLabel position={[0, 3.4, 0]}>
         <div className="glass pointer-events-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold">
           Build New Project
         </div>
-      </CityLabel>
+      </CityLabel>}
     </group>
   );
 }

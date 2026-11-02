@@ -1,13 +1,11 @@
-import { useMemo } from "react";
 import { CITY_LOTS } from "@/data/cityLots";
-import { PROJECTS } from "@/data/projects";
-import { getNextAvailableSlot } from "@/utils/cityLayout";
+import { useProjectRegistry } from "@/store/useProjectRegistry";
 import { CityRoads } from "./CityRoads";
 import { AmbientCity } from "@/components/ambient/AmbientCity";
 import { DevelopmentLot } from "./DevelopmentLot";
 
 export function CityEnvironment() {
-  const nextSlotId = useMemo(() => getNextAvailableSlot(CITY_LOTS, PROJECTS)?.slot.id ?? null, []);
+  const projects = useProjectRegistry((s) => s.projects);
   return (
     <group>
       {/* Diorama base */}
@@ -22,7 +20,7 @@ export function CityEnvironment() {
       <CityRoads />
       <AmbientCity />
       {CITY_LOTS.map((lot) => (
-        <DevelopmentLot key={lot.id} lot={lot} projects={PROJECTS} nextSlotId={nextSlotId} />
+        <DevelopmentLot key={lot.id} lot={lot} projects={projects} />
       ))}
     </group>
   );

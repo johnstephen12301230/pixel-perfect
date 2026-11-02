@@ -3,7 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { OrthographicCamera as ThreeCamera, Vector3 } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { PROJECTS } from "@/data/projects";
+import { findProject } from "@/store/useProjectRegistry";
 import { useCityStore } from "@/store/useCityStore";
 import { cameraBlend, getBuildingCenter, getFocusFraming } from "@/utils/cameraFocus";
 
@@ -35,7 +35,7 @@ export function CityCameraRig() {
       orbit.enabled = false;
       orbit.enableDamping = false;
       orbit.update();
-      const project = PROJECTS.find((p) => p.id === state.selectedProjectId);
+      const project = findProject(state.selectedProjectId);
       const center = project ? getBuildingCenter(project) : null;
       if (project && center) {
         if (!overview.current) overview.current = { position: camera.position.clone(), target: orbit.target.clone(), zoom: camera.zoom };
