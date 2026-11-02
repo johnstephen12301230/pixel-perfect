@@ -53,7 +53,7 @@ export function CityCameraRig() {
         const up = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
         target.addScaledVector(right, framing.shiftX).addScaledVector(up, framing.shiftY);
         destination.current = { target, position: target.clone().add(new Vector3(40, 38, 40)), zoom: framing.zoom };
-        if (resized) useCityStore.setState({ interaction: "focusing-building" });
+        if (resized && project) useCityStore.setState({ interaction: "focusing-building" });
       } else {
         const initial = { position: new Vector3(40, 38, 40), target: new Vector3(), zoom: size.width < 640 ? 11 : 19 };
         destination.current = overview.current ?? initial;
