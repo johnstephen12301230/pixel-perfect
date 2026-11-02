@@ -143,7 +143,7 @@ function GlassBlock({ w, d, floors, baseY, cutY, live, accent, highlight, plan, 
   );
 }
 
-export function ProjectBuilding({ project, position }: { project: Project; position: [number, number, number] }) {
+export function ProjectBuilding({ project, position, interactive = true }: { project: Project; position: [number, number, number]; interactive?: boolean }) {
   const [hover, setHover] = useState(false);
   const selected = useCityStore((s) => s.selectedProjectId === project.id);
   const selectProject = useCityStore((s) => s.selectProject);
@@ -227,9 +227,9 @@ export function ProjectBuilding({ project, position }: { project: Project; posit
     <RevealCtx.Provider value={reveal}>
       <group
         position={position}
-        onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = "pointer"; }}
-        onPointerOut={() => { setHover(false); document.body.style.cursor = ""; }}
-        onClick={(e) => { e.stopPropagation(); if (e.delta > 4) return; useCityStore.getState().selectWorker(null); selectProject(project.id); }}
+        onPointerOver={(e) => { if (!interactive) return; e.stopPropagation(); setHover(true); document.body.style.cursor = "pointer"; }}
+        onPointerOut={() => { if (!interactive) return; setHover(false); document.body.style.cursor = ""; }}
+        onClick={(e) => { if (!interactive) return; e.stopPropagation(); if (e.delta > 4) return; useCityStore.getState().selectWorker(null); selectProject(project.id); }}
       >
         <mesh position={[0, 0.02, 0]} receiveShadow>
           <boxGeometry args={[5.8, 0.05, 5.8]} />
