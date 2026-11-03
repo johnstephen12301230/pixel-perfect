@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
-import { ArrowLeft, ArrowUpRight, Building2, Check, Code2, Layers, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpen, Building2, Check, Code2, Download, Layers, PlayCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PROJECTS } from "@/data/projects";
+import { useProjectRegistry } from "@/store/useProjectRegistry";
+import { downloadProjectConfig, locationLabel } from "@/utils/projectDraft";
 import { CITY_LOTS } from "@/data/cityLots";
 import { useCityStore } from "@/store/useCityStore";
 import { getInteriorPlan } from "@/utils/interiorLayout";
@@ -12,7 +13,7 @@ export function ProjectDetailsPanel() {
   const interaction = useCityStore((s) => s.interaction);
   const back = useCityStore((s) => s.selectProject);
   const panel = useRef<HTMLElement>(null);
-  const project = PROJECTS.find((item) => item.id === id);
+  const project = useProjectRegistry((s) => s.projects.find((item) => item.id === id));
 
   useEffect(() => {
     if (!id) return;
@@ -45,11 +46,18 @@ export function ProjectDetailsPanel() {
       <div className="min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <Building2 className="h-4 w-4 text-primary" /> {lot?.name} <span aria-hidden="true">/</span> {project.category}
-          <span className="ml-auto rounded-full bg-secondary px-2.5 py-1 capitalize">{project.publicationStatus}</span>
+          <span className="ml-auto rounded-full bg-secondary px-2.5 py-1">{project.publicationStatus === "local-draft" ? "Local Draft" : project.publicationStatus === "published" ? "Published" : project.publicationStatus === "demo" ? "Demo" : "Draft"}</span>
         </div>
         <h2 id="project-title" className="break-words text-2xl font-semibold">{project.name}</h2>
         <p className="mt-2 text-sm font-medium text-muted-foreground">{project.tagline}</p>
         <p className="mt-5 text-sm leading-relaxed">{project.description}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{locationLabel(CITY_LOTS, project.slotId)}</p>
+        {project.publicationStatus === "local-draft" && (
+          <div className="mt-4 rounded-2xl border border-glass-border p-3 text-xs text-muted-foreground">
+            Saved only in this browser.
+            <Button variant="outline" size="sm" onClick={() => { downloadProjectConfig(project); useCityStore.getState().notify("Project configuration exported."); }} className="mt-2 w-full rounded-full"><Download /> Export Project Configuration</Button>
+          </div>
+        )}
         <section className="mt-6 border-t border-glass-border pt-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold"><Layers className="h-4 w-4 text-primary" /> Technology</h3>
           <ul className="mt-3 flex flex-wrap gap-2">{project.technologies.map((tech) => <li key={tech} className="rounded-md bg-secondary px-2.5 py-1.5 text-xs font-medium">{tech}</li>)}</ul>
@@ -75,6 +83,12 @@ export function ProjectDetailsPanel() {
         </section>
         {project.screenshots.length > 0 && <div className="mt-5 space-y-3">{project.screenshots.map((src, index) => <img key={src} src={src} alt={`${project.name} screenshot ${index + 1}`} className="aspect-video w-full rounded-lg object-cover" />)}</div>}
       </div>
+      {(project.documentationUrl || project.demoUrl) && (
+        <div className="flex shrink-0 gap-2 border-t border-glass-border px-4 pt-3">
+          {project.documentationUrl && <Button asChild variant="ghost" size="sm" className="flex-1 rounded-full"><a href={project.documentationUrl} target="_blank" rel="noopener noreferrer"><BookOpen /> Docs</a></Button>}
+          {project.demoUrl && <Button asChild variant="ghost" size="sm" className="flex-1 rounded-full"><a href={project.demoUrl} target="_blank" rel="noopener noreferrer"><PlayCircle /> Demo</a></Button>}
+        </div>
+      )}
       <div className="flex shrink-0 gap-2 border-t border-glass-border p-4">
         {project.liveUrl ? <Button asChild className="flex-1 rounded-full btn-primary-glass"><a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Live project <ArrowUpRight /></a></Button> : <Button disabled className="flex-1 rounded-full">Live unavailable <ArrowUpRight /></Button>}
         {project.repositoryUrl ? <Button asChild variant="outline" className="flex-1 rounded-full"><a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer"><Code2 /> Repository</a></Button> : <Button disabled variant="outline" className="flex-1 rounded-full"><Code2 /> No repository</Button>}

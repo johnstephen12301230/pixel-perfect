@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Building2, ChevronLeft, LayoutGrid, Map, Settings, User, X } from "lucide-react";
+import { Download, Building2, ChevronLeft, LayoutGrid, Map, Settings, User, X } from "lucide-react";
 import { useCityStore } from "@/store/useCityStore";
-import { PROJECTS } from "@/data/projects";
+import { useProjectRegistry } from "@/store/useProjectRegistry";
+import { CITY_LOTS } from "@/data/cityLots";
+import { downloadProjectConfig, locationLabel } from "@/utils/projectDraft";
 import { cn } from "@/lib/utils";
 
 type View = "menu" | "projects" | "settings";
@@ -10,6 +12,9 @@ type View = "menu" | "projects" | "settings";
 export function DevCitySidebar() {
   const { sidebarOpen, setSidebarOpen, resetCity, selectProject, selectedProjectId } = useCityStore();
   const navigate = useNavigate();
+  const PROJECTS = useProjectRegistry((s) => s.projects);
+  const storageOk = useProjectRegistry((s) => s.storageAvailable);
+  const notify = useCityStore((s) => s.notify);
   const [view, setView] = useState<View>("menu");
   const panelRef = useRef<HTMLDivElement>(null);
   const close = () => setSidebarOpen(false);
@@ -84,7 +89,7 @@ export function DevCitySidebar() {
         {view === "projects" && (
           <ul className="flex flex-col gap-1.5 overflow-y-auto">
             {PROJECTS.map((p) => (
-              <li key={p.id}>
+              <li key={p.id} className="relative">
                 <button
                   className={cn(row, selectedProjectId === p.id && "bg-glass-strong")}
                   onClick={() => { selectProject(p.id); navigate({ to: "/projects" }); close(); }}
@@ -92,15 +97,21 @@ export function DevCitySidebar() {
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style={{ background: p.accentColor }}>
                     <Building2 className="h-4 w-4 text-primary-foreground" />
                   </span>
-                  <span className="flex flex-col">
-                    <span>{p.name}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="flex items-center gap-1.5">{p.name}{p.publicationStatus === "local-draft" && <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">Local Draft</span>}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">{locationLabel(CITY_LOTS, p.slotId)}</span>
                     <span className="text-xs font-medium text-muted-foreground">{p.category} · {p.technologies.join(", ")}</span>
                   </span>
                 </button>
+                {p.publicationStatus === "local-draft" && (
+                  <button aria-label={`Export ${p.name} configuration`} title="Export configuration" onClick={() => { downloadProjectConfig(p); notify("Project configuration exported."); }}
+                    className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full hover:bg-glass-strong"><Download className="h-4 w-4" /></button>
+                )}
               </li>
             ))}
           </ul>
         )}
+        {view === "projects" && !storageOk && <p className="m-2 text-xs text-muted-foreground">This browser can't save drafts. Export each new project to keep it.</p>}
 
         {view === "settings" && (
           <div className="m-2 rounded-2xl border border-dashed border-border p-6 text-center">
