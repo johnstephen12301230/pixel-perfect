@@ -192,10 +192,10 @@ export function isValidStoredProject(x: unknown): x is Project {
   const str = (k: string) => typeof p[k] === "string";
   const strArr = (k: string) => Array.isArray(p[k]) && (p[k] as unknown[]).every((v) => typeof v === "string");
   const urlOk = (k: string) => p[k] == null || (typeof p[k] === "string" && isSafeUrl(p[k] as string));
-  return str("id") && str("name") && (p.name as string).trim() !== "" && str("description") && str("category") && str("tagline")
-    && BUILDING_STYLES.some((s) => s.id === p.buildingStyle) && typeof p.accentColor === "string" && isHexColor(p.accentColor)
-    && typeof p.floors === "number" && p.floors >= 1 && p.floors <= 20 && str("lotId") && str("slotId")
-    && strArr("technologies") && (p.technologies as string[]).length > 0 && strArr("departments") && strArr("features")
+  return str("id") && str("name") && (p["name"] as string).trim() !== "" && str("description") && str("category") && str("tagline")
+    && BUILDING_STYLES.some((s) => s.id === p["buildingStyle"]) && typeof p["accentColor"] === "string" && isHexColor(p["accentColor"])
+    && typeof p["floors"] === "number" && p["floors"] >= 1 && p["floors"] <= 20 && str("lotId") && str("slotId")
+    && strArr("technologies") && (p["technologies"] as string[]).length > 0 && strArr("departments") && strArr("features")
     && ["liveUrl", "repositoryUrl", "documentationUrl", "demoUrl", "logoUrl"].every(urlOk);
 }
 
