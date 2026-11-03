@@ -19,7 +19,7 @@ const STEPS = ["Identity", "Stack", "Appearance", "Links", "Preview"] as const;
 const VALIDATORS = [validateIdentity, validateStack, validateAppearance, validateLinks, validateForm];
 const field = "w-full rounded-xl border border-glass-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
 
-function Field({ label, error, hint, children, id }: { label: string; error?: string; hint?: string; children: React.ReactNode; id: string }) {
+function Field({ label, error, hint, children, id }: { label: string; error?: string | undefined; hint?: string; children: React.ReactNode; id: string }) {
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="text-xs font-semibold">{label}</label>
@@ -271,7 +271,7 @@ function LinksStep({ form, set, errors }: StepProps) {
   );
 }
 
-function PreviewStep({ project, location, error }: { project: Project; location: string; error?: string }) {
+function PreviewStep({ project, location, error }: { project: Project; location: string; error?: string | undefined }) {
   const blocks = getBuildingBlocks(project);
   const w = Math.max(...blocks.map((b) => Math.abs(b.offset[0]) * 2 + b.w));
   const d = Math.max(...blocks.map((b) => Math.abs(b.offset[2]) * 2 + b.d));

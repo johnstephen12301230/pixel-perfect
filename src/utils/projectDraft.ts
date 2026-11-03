@@ -55,7 +55,7 @@ export const emptyForm = (): ProjectForm => ({
   liveUrl: "", repositoryUrl: "", documentationUrl: "", demoUrl: "",
 });
 
-export type FormErrors = Partial<Record<keyof ProjectForm, string>>;
+export type FormErrors = { [K in keyof ProjectForm]?: string | undefined };
 
 /** Only http(s) URLs with a host are accepted; empty means "omit". */
 export function isSafeUrl(value: string): boolean {
