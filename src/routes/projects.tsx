@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CityCanvas } from "@/components/city/CityCanvas";
+import { useEffect } from "react";
+import { BuildProjectDialog } from "@/components/builder/BuildProjectDialog";
+import { useProjectRegistry } from "@/store/useProjectRegistry";
 import { ProjectDetailsPanel } from "@/components/projects/ProjectDetailsPanel";
 
 export const Route = createFileRoute("/projects")({
@@ -18,11 +21,13 @@ export const Route = createFileRoute("/projects")({
 });
 
 function ProjectsPage() {
+  useEffect(() => useProjectRegistry.getState().hydrate(), []);
   return (
     <main>
       <h1 className="sr-only">DevCity projects</h1>
       <CityCanvas />
       <ProjectDetailsPanel />
+      <BuildProjectDialog />
     </main>
   );
 }
