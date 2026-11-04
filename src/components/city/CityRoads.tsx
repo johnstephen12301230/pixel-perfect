@@ -1,14 +1,16 @@
-import { CITY_LOTS, LOT_PITCH, ROAD_WIDTH } from "@/data/cityLots";
-import { PROJECTS } from "@/data/projects";
+import { useMemo } from "react";
+import { ROAD_WIDTH } from "@/data/cityLots";
+import type { DevelopmentLot } from "@/types/city";
+import { getProjects } from "@/store/useProjectRegistry";
 import { buildPedestrianGraph } from "@/utils/cityRoutes";
+import { roadGrid } from "@/utils/cityExpansion";
 import { Streetlight } from "./Props";
 
-const CROSSWALKS = buildPedestrianGraph(CITY_LOTS, PROJECTS).crosswalks;
-
-const EXTENT = 56;
-const ROAD_LINES = [-LOT_PITCH, 0, LOT_PITCH];
-
-export function CityRoads() {
+/** Road grid, dashes and crosswalks derived from the current lots, so expansion districts connect seamlessly. */
+export function CityRoads({ lots }: { lots: DevelopmentLot[] }) {
+  const { lines: ROAD_LINES, extent: EXTENT } = useMemo(() => roadGrid(lots), [lots]);
+  const CROSSWALKS = useMemo(() => buildPedestrianGraph(lots, getProjects()).crosswalks, [lots]);
+  const dashes = useMemo(() => { const n = Math.floor(EXTENT / 4); return Array.from({ length: n }, (_, i) => -((n - 1) * 4) / 2 + i * 4); }, [EXTENT]);
   return (
     <group>
       {ROAD_LINES.map((c) => (
@@ -23,7 +25,7 @@ export function CityRoads() {
             <meshStandardMaterial color="#5d6a78" roughness={0.85} />
           </mesh>
           {/* Lane dashes */}
-          {Array.from({ length: 14 }, (_, i) => -26 + i * 4).map((t) =>
+          {dashes.map((t) =>
             ROAD_LINES.some((r) => Math.abs(r - t) < 2.5) ? null : (
               <group key={t}>
                 <mesh position={[c, 0.02, t]} rotation-x={-Math.PI / 2}>

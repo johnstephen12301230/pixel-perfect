@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, Color, CylinderGeometry, Euler, InstancedMesh, Matrix4, MeshStandardMaterial, Quaternion, Vector3 } from "three";
-import { CITY_LOTS } from "@/data/cityLots";
-import { PROJECTS } from "@/data/projects";
+import type { DevelopmentLot } from "@/types/city";
+import { getProjects } from "@/store/useProjectRegistry";
 import { useCityStore } from "@/store/useCityStore";
 import { AmbientSim, POPULATION, deviceTier, type PedestrianController, type VehicleController } from "@/utils/ambientSim";
 import { pose } from "@/components/workers/WorkerAnimationController";
@@ -118,11 +118,11 @@ function writeCar(boxes: InstancedMesh, wheels: InstancedMesh, i: number, c: Veh
   });
 }
 
-export function AmbientCity() {
+export function AmbientCity({ lots }: { lots: DevelopmentLot[] }) {
   const sim = useMemo(() => {
     const tier = deviceTier(window.innerWidth, navigator.hardwareConcurrency || 4);
-    return new AmbientSim(CITY_LOTS, PROJECTS, POPULATION[tier]);
-  }, []);
+    return new AmbientSim(lots, getProjects(), POPULATION[tier]);
+  }, [lots]);
   const reduced = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
   const peds = useRef<InstancedMesh>(null);
   const boxes = useRef<InstancedMesh>(null);

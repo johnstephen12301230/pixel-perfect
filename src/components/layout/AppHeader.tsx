@@ -12,8 +12,8 @@ export function AppHeader() {
   const onBuild = () => {
     const before = useProjectRegistry.getState().lots.length;
     const next = useProjectRegistry.getState().nextSlot();
-    if (useProjectRegistry.getState().lots.length > before) notify(`The city is expanding: ${next.lot.district ?? ""} ${next.lot.name} is ready to build.`);
     openBuilder(next.slot.id);
+    if (useProjectRegistry.getState().lots.length > before) notify(`The city is expanding: ${next.lot.name} in the ${next.lot.district ?? "city"} is ready to build.`);
   };
 
   return (
