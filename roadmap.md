@@ -5,3 +5,4 @@
 - [x] Regression tests and browser verification- [x] Phase 3: cutaway interiors (departments from tech stack, Phase 4 waypoints ready)
 - [x] Phase 4: living technology employees
 - [x] Phase 5: living city (pedestrians, cars, crosswalk signals)
+- [x] Phase 6: build your own project
