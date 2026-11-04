@@ -1,9 +1,9 @@
-import { CITY_LOTS } from "@/data/cityLots";
+import { getLots } from "@/store/useProjectRegistry";
 import type { Project } from "@/types/project";
 import { slotWorldPosition } from "./cityLayout";
 
 export function getBuildingCenter(project: Project): [number, number, number] | null {
-  const lot = CITY_LOTS.find((item) => item.id === project.lotId);
+  const lot = getLots().find((item) => item.id === project.lotId);
   const slot = lot?.slots.find((item) => item.id === project.slotId);
   if (!lot || !slot) return null;
   const [x, , z] = slotWorldPosition({ lot, slot });

@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { CITY_LOTS } from "@/data/cityLots";
+import type { DevelopmentLot, SlotOccupancy } from "@/types/city";
+import { buildCityLots, expansionCountFor, makeExpansionLot } from "@/utils/cityExpansion";
+import { getNextAvailableSlot } from "@/utils/cityLayout";
 import { PROJECTS } from "@/data/projects";
 import type { Project } from "@/types/project";
 import { checkSlot, loadLocalProjects, serializeLocalProjects, STORAGE_KEY } from "@/utils/projectDraft";
@@ -20,6 +23,10 @@ function getStorage(): Storage | null {
 interface RegistryState {
   /** Built-in projects first, then local drafts. Existing entries keep object identity. */
   projects: Project[];
+  /** Base district plus deterministic expansion lots. */
+  lots: DevelopmentLot[];
+  /** Next vacant slot; grows the city with a new lot when every slot is taken. */
+  nextSlot: () => SlotOccupancy;
   localIds: string[];
   storageAvailable: boolean;
   loaded: boolean;
@@ -31,6 +38,15 @@ interface RegistryState {
 
 export const useProjectRegistry = create<RegistryState>((set, get) => ({
   projects: PROJECTS,
+  lots: CITY_LOTS,
+  nextSlot: () => {
+    const { lots, projects } = get();
+    const free = getNextAvailableSlot(lots, projects);
+    if (free) return free;
+    const lot = makeExpansionLot(lots.length - CITY_LOTS.length);
+    set({ lots: [...lots, lot] });
+    return { lot, slot: lot.slots[0]!, projectId: null };
+  },
   localIds: [],
   storageAvailable: true,
   loaded: false,
@@ -38,13 +54,16 @@ export const useProjectRegistry = create<RegistryState>((set, get) => ({
   hydrate: () => {
     if (get().loaded) return;
     const storage = getStorage();
-    const res = loadLocalProjects(storage, CITY_LOTS, PROJECTS);
-    set({ projects: [...PROJECTS, ...res.projects], localIds: res.projects.map((p) => p.id), storageAvailable: res.available, loaded: true, rejectedOnLoad: res.rejected });
+    let ids: string[] = [];
+    try { const raw = JSON.parse(storage?.getItem(STORAGE_KEY) ?? "null"); ids = Array.isArray(raw?.projects) ? raw.projects.map((p: { lotId?: unknown }) => String(p?.lotId ?? "")) : []; } catch { ids = []; }
+    const lots = buildCityLots(expansionCountFor(ids));
+    const res = loadLocalProjects(storage, lots, PROJECTS);
+    set({ lots, projects: [...PROJECTS, ...res.projects], localIds: res.projects.map((p) => p.id), storageAvailable: res.available, loaded: true, rejectedOnLoad: res.rejected });
   },
   addProject: (project) => {
-    const { projects, localIds } = get();
+    const { projects, localIds, lots } = get();
     if (projects.some((p) => p.id === project.id)) return { ok: false, reason: "A project with this ID already exists. Try again." };
-    const slot = checkSlot(CITY_LOTS, projects, project.lotId, project.slotId);
+    const slot = checkSlot(lots, projects, project.lotId, project.slotId);
     if (!slot.ok) return slot;
     const local = [...projects.filter((p) => localIds.includes(p.id)), project];
     let persisted = false;
@@ -59,3 +78,4 @@ export const useProjectRegistry = create<RegistryState>((set, get) => ({
 
 export const getProjects = () => useProjectRegistry.getState().projects;
 export const findProject = (id: string | null) => (id ? getProjects().find((p) => p.id === id) : undefined);
+export const getLots = () => useProjectRegistry.getState().lots;

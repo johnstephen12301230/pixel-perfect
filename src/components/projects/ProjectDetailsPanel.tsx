@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { ArrowLeft, ArrowUpRight, BookOpen, Building2, Check, Code2, Download, Layers, PlayCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useProjectRegistry } from "@/store/useProjectRegistry";
+import { getLots, useProjectRegistry } from "@/store/useProjectRegistry";
 import { downloadProjectConfig, locationLabel } from "@/utils/projectDraft";
-import { CITY_LOTS } from "@/data/cityLots";
 import { useCityStore } from "@/store/useCityStore";
 import { getInteriorPlan } from "@/utils/interiorLayout";
 import { defaultFocusDepartment, getEmployees } from "@/utils/workers";
@@ -35,7 +34,7 @@ export function ProjectDetailsPanel() {
   if (!project) return null;
   const activeDept = focused ?? defaultFocusDepartment(employees);
   const depts = [...new Map(employees.map((e) => [e.department.id, e.department])).values()];
-  const lot = CITY_LOTS.find((item) => item.id === project.lotId);
+  const lot = getLots().find((item) => item.id === project.lotId);
   return (
     <aside ref={panel} tabIndex={-1} aria-labelledby="project-title" aria-busy={interaction === "focusing-building"}
       className="glass project-details fixed inset-x-3 bottom-3 z-30 flex max-h-[48dvh] flex-col overflow-hidden rounded-3xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:top-24 sm:max-h-none sm:w-[380px]">
@@ -51,7 +50,7 @@ export function ProjectDetailsPanel() {
         <h2 id="project-title" className="break-words text-2xl font-semibold">{project.name}</h2>
         <p className="mt-2 text-sm font-medium text-muted-foreground">{project.tagline}</p>
         <p className="mt-5 text-sm leading-relaxed">{project.description}</p>
-        <p className="mt-3 text-xs text-muted-foreground">{locationLabel(CITY_LOTS, project.slotId)}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{locationLabel(getLots(), project.slotId)}</p>
         {project.publicationStatus === "local-draft" && (
           <div className="mt-4 rounded-2xl border border-glass-border p-3 text-xs text-muted-foreground">
             Saved only in this browser.
