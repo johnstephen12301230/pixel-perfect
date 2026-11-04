@@ -24,7 +24,7 @@ const LAYOUTS: Record<1 | 2 | 3 | 4, Vec2[]> = {
   ],
 };
 
-function makeLot(id: string, name: string, gx: number, gz: number, capacity: 1 | 2 | 3 | 4): DevelopmentLot {
+export function makeLot(id: string, name: string, gx: number, gz: number, capacity: 1 | 2 | 3 | 4, district?: string): DevelopmentLot {
   const slots: BuildingSlot[] = LAYOUTS[capacity].map((offset, i) => ({
     id: `${id}-s${i + 1}`,
     lotId: id,
@@ -38,6 +38,7 @@ function makeLot(id: string, name: string, gx: number, gz: number, capacity: 1 |
     size: [LOT_SIZE, LOT_SIZE],
     capacity,
     slots,
+    ...(district ? { district } : {}),
   };
 }
 
