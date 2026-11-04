@@ -3,11 +3,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { OrthographicCamera as ThreeCamera, Vector3 } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { findProject } from "@/store/useProjectRegistry";
-import { CITY_LOTS } from "@/data/cityLots";
+import { findProject, getLots } from "@/store/useProjectRegistry";
 
 function slotFocusTarget(slotId: string): [number, number, number] | null {
-  const lot = CITY_LOTS.find((l) => l.slots.some((s) => s.id === slotId));
+  const lot = getLots().find((l) => l.slots.some((s) => s.id === slotId));
   const slot = lot?.slots.find((s) => s.id === slotId);
   return lot && slot ? [lot.position[0] + slot.offset[0], 2, lot.position[1] + slot.offset[1]] : null;
 }

@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Download, Building2, ChevronLeft, LayoutGrid, Map, Settings, User, X } from "lucide-react";
 import { useCityStore } from "@/store/useCityStore";
-import { useProjectRegistry } from "@/store/useProjectRegistry";
-import { CITY_LOTS } from "@/data/cityLots";
+import { getLots, useProjectRegistry } from "@/store/useProjectRegistry";
 import { downloadProjectConfig, locationLabel } from "@/utils/projectDraft";
 import { cn } from "@/lib/utils";
 
@@ -99,7 +98,7 @@ export function DevCitySidebar() {
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className="flex items-center gap-1.5">{p.name}{p.publicationStatus === "local-draft" && <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">Local Draft</span>}</span>
-                    <span className="text-[11px] font-medium text-muted-foreground">{locationLabel(CITY_LOTS, p.slotId)}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">{locationLabel(getLots(), p.slotId)}</span>
                     <span className="text-xs font-medium text-muted-foreground">{p.category} · {p.technologies.join(", ")}</span>
                   </span>
                 </button>

@@ -1,9 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Download, MapPin, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CITY_LOTS } from "@/data/cityLots";
 import { useCityStore } from "@/store/useCityStore";
-import { useProjectRegistry } from "@/store/useProjectRegistry";
+import { getLots, useProjectRegistry } from "@/store/useProjectRegistry";
 import type { Project, TechnologyCategory } from "@/types/project";
 import { cn } from "@/lib/utils";
 import { getBuildingBlocks } from "@/utils/interiorLayout";
@@ -51,7 +50,7 @@ export function BuildProjectDialog() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const lot = CITY_LOTS.find((l) => l.slots.some((s) => s.id === slotId));
+  const lot = getLots().find((l) => l.slots.some((s) => s.id === slotId));
   const preview = useMemo(() => formToProject(form, { lotId: lot?.id ?? "", slotId: slotId ?? "" }, "__preview__"), [form, lot, slotId]);
   if (!open || !slotId || !lot) return null;
 
@@ -73,7 +72,7 @@ export function BuildProjectDialog() {
       return;
     }
     const reg = useProjectRegistry.getState();
-    const check = checkSlot(CITY_LOTS, reg.projects, lot.id, slotId);
+    const check = checkSlot(getLots(), reg.projects, lot.id, slotId);
     if (!check.ok) return alertSlot(check.reason);
     const project = formToProject(form, { lotId: lot.id, slotId }, makeProjectId(form.name, new Set(reg.projects.map((p) => p.id))));
     const res = reg.addProject(project);
@@ -88,7 +87,7 @@ export function BuildProjectDialog() {
       <div className="flex shrink-0 items-start justify-between gap-3 border-b border-glass-border px-5 py-4">
         <div className="min-w-0">
           <h2 id="builder-title" className="text-lg font-semibold">{created ? "Added to the city" : "Build a project"}</h2>
-          <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><MapPin className="h-3.5 w-3.5 text-primary" /> {locationLabel(CITY_LOTS, slotId)}</p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><MapPin className="h-3.5 w-3.5 text-primary" /> {locationLabel(getLots(), slotId)}</p>
         </div>
         <Button variant="ghost" size="icon" onClick={close} aria-label="Close builder" className="rounded-full hover:bg-glass-strong"><X /></Button>
       </div>
@@ -112,7 +111,7 @@ export function BuildProjectDialog() {
             {step === 1 && <StackStep form={form} set={set} errors={errors} />}
             {step === 2 && <AppearanceStep form={form} set={set} errors={errors} />}
             {step === 3 && <LinksStep form={form} set={set} errors={errors} />}
-            {step === 4 && <PreviewStep project={preview} location={locationLabel(CITY_LOTS, slotId)} error={errors.buildingStyle} />}
+            {step === 4 && <PreviewStep project={preview} location={locationLabel(getLots(), slotId)} error={errors.buildingStyle} />}
           </div>
           <div className="flex shrink-0 items-center gap-2 border-t border-glass-border p-4">
             <Button variant="ghost" onClick={close} className="rounded-full">Cancel</Button>

@@ -182,7 +182,7 @@ export function locationLabel(lots: DevelopmentLot[], slotId: string) {
   const lot = lots.find((l) => l.slots.some((s) => s.id === slotId));
   if (!lot) return "Unknown location";
   const n = lot.slots.findIndex((s) => s.id === slotId) + 1;
-  return `Central District / ${lot.name} / Slot ${String(n).padStart(2, "0")}`;
+  return `${lot.district ?? "Central District"} / ${lot.name} / Slot ${String(n).padStart(2, "0")}`;
 }
 
 /** Strict shape check for stored or imported project data. */

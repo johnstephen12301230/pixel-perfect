@@ -12,6 +12,8 @@ export interface BuildingSlot {
 export interface DevelopmentLot {
   id: string;
   name: string;
+  /** District label; defaults to the central district. */
+  district?: string;
   /** World center (x, z). */
   position: Vec2;
   size: Vec2;

@@ -1,9 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, Plus } from "lucide-react";
 import { useCityStore } from "@/store/useCityStore";
-import { CITY_LOTS } from "@/data/cityLots";
-import { getProjects } from "@/store/useProjectRegistry";
-import { getNextAvailableSlot } from "@/utils/cityLayout";
+import { useProjectRegistry } from "@/store/useProjectRegistry";
 import { NavigationToggle } from "./NavigationToggle";
 
 export function AppHeader() {
@@ -12,9 +10,10 @@ export function AppHeader() {
   const { setSidebarOpen, openBuilder, notify } = useCityStore();
 
   const onBuild = () => {
-    const next = getNextAvailableSlot(CITY_LOTS, getProjects());
-    if (!next) return notify("Every building slot is taken. New lots arrive with city expansion.");
+    const before = useProjectRegistry.getState().lots.length;
+    const next = useProjectRegistry.getState().nextSlot();
     openBuilder(next.slot.id);
+    if (useProjectRegistry.getState().lots.length > before) notify(`The city is expanding: ${next.lot.name} in the ${next.lot.district ?? "city"} is ready to build.`);
   };
 
   return (
