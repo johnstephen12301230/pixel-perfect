@@ -1,4 +1,4 @@
-import { useRef, type MutableRefObject } from "react";
+import { useEffect, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, CylinderGeometry, Group, MeshStandardMaterial, SphereGeometry } from "three";
 import { easeOut, windowed } from "@/utils/construction";
@@ -36,6 +36,7 @@ export function ConstructionSite({ progress, accent, height }: { progress: Mutab
   const crew = useRef<(Group | null)[]>([]);
   const accentMat = useRef(new MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.4 }));
   accentMat.current.color.set(accent);
+  useEffect(() => { const m = accentMat.current; return () => m.dispose(); }, []);
 
   useFrame(({ clock }) => {
     const p = progress.current;
