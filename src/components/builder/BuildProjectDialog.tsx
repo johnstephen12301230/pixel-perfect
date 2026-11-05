@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useConstruction } from "@/store/useConstruction";
 import { ArrowLeft, ArrowRight, Check, Download, MapPin, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCityStore } from "@/store/useCityStore";
