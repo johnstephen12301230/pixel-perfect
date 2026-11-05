@@ -5,6 +5,9 @@ import { CityLabel } from "@/components/city/CityLabel";
 import { StoreyInterior } from "@/components/interiors/BuildingInterior";
 import type { Project } from "@/types/project";
 import { useCityStore } from "@/store/useCityStore";
+import { constructionProgress, useConstruction } from "@/store/useConstruction";
+import { easeOut, storeyBuild, windowed } from "@/utils/construction";
+import { ConstructionSite } from "@/components/construction/ConstructionSite";
 import { defaultFocusDepartment, getEmployees } from "@/utils/workers";
 import type { TechnologyEmployee } from "@/utils/workers";
 import { FLOOR_H, getBuildingBlocks, getInteriorPlan, type BlockPlan } from "@/utils/interiorLayout";
@@ -73,34 +76,42 @@ function RoofReveal({ children, lift = 0.5 }: { children: ReactNode; lift?: numb
 
 /** Hide progress (0 visible → 1 lifted away) of the storey a mesh belongs to. */
 const StoreyCtx = createContext<MutableRefObject<number>>({ current: 0 });
+/** Construction progress 0..1 for this building (1 = complete); written per frame, never React state. */
+const BuildCtx = createContext<MutableRefObject<number>>({ current: 1 });
 
 /** One storey: slab, facade segment, posts, and its interior. Storeys above the focused floor lift and fade. */
-function Storey({ level, hidden, children }: { level: number; hidden: boolean; children: ReactNode }) {
+function Storey({ level, hidden, buildH, children }: { level: number; hidden: boolean; buildH: number; children: ReactNode }) {
   const hide = useRef(0);
+  const shown = useRef(0);
+  const build = useContext(BuildCtx);
   const group = useRef<Group>(null);
   useFrame((_, dt) => {
     const goal = hidden ? 1 : 0;
     const g = group.current;
-    if (!g || (goal === hide.current && g.userData["settled"])) return;
+    const b = build.current >= 1 ? 1 : storeyBuild(build.current, buildH);
+    if (!g || (goal === hide.current && g.userData["settled"] && b >= 1)) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     hide.current = reduced ? goal : hide.current + (goal - hide.current) * (1 - Math.exp(-6 * Math.min(dt, 0.05)));
     if (Math.abs(goal - hide.current) < 0.003) hide.current = goal;
     g.userData["settled"] = hide.current === goal;
-    g.position.y = level * FLOOR_H + hide.current * 1.2;
-    g.visible = hide.current < 0.99;
+    // Under construction, storeys drop into place bottom-to-top and fade in.
+    const h = Math.max(hide.current, 1 - b);
+    shown.current = h;
+    g.position.y = level * FLOOR_H + h * 1.2;
+    g.visible = h < 0.99;
     g.traverse((o) => {
       if (!(o instanceof Mesh)) return;
       const m = o.material as MeshStandardMaterial;
       if (!m || m.userData["shared"] || m.userData["facade"]) return;
       if (m.userData["baseOpacity"] === undefined) m.userData["baseOpacity"] = m.opacity;
       m.transparent = true;
-      setOpacity(m, m.userData["baseOpacity"] * (1 - hide.current));
+      setOpacity(m, m.userData["baseOpacity"] * (1 - h));
     });
   });
-  return <StoreyCtx.Provider value={hide}><group ref={group} position={[0, level * FLOOR_H, 0]}>{children}</group></StoreyCtx.Provider>;
+  return <StoreyCtx.Provider value={shown}><group ref={group} position={[0, level * FLOOR_H, 0]}>{children}</group></StoreyCtx.Provider>;
 }
 
-function GlassBlock({ w, d, floors, baseY, cutY, live, accent, highlight, plan, blockIndex, employees }: { w: number; d: number; floors: number; baseY: number; cutY: number; live: boolean; accent: string; highlight: boolean; plan: BlockPlan | null; blockIndex: number; employees: TechnologyEmployee[] }) {
+function GlassBlock({ w, d, floors, baseY, totalH, cutY, live, accent, highlight, plan, blockIndex, employees }: { w: number; d: number; floors: number; baseY: number; totalH: number; cutY: number; live: boolean; accent: string; highlight: boolean; plan: BlockPlan | null; blockIndex: number; employees: TechnologyEmployee[] }) {
   const H = FLOOR_H;
   const hl = { color: accent, on: highlight };
   return (
@@ -108,7 +119,7 @@ function GlassBlock({ w, d, floors, baseY, cutY, live, accent, highlight, plan, 
       {Array.from({ length: floors }, (_, level) => {
         const hidden = baseY + level * H >= cutY - 0.01;
         return (
-          <Storey key={level} level={level} hidden={hidden}>
+          <Storey key={level} level={level} hidden={hidden} buildH={Math.min(1, (baseY + level * H) / totalH)}>
             <mesh receiveShadow>
               <boxGeometry args={[w + 0.06, 0.08, d + 0.06]} />
               <meshStandardMaterial color={FRAME} roughness={0.5} />
@@ -143,7 +154,31 @@ function GlassBlock({ w, d, floors, baseY, cutY, live, accent, highlight, plan, 
   );
 }
 
-export function ProjectBuilding({ project, position, interactive = true }: { project: Project; position: [number, number, number]; interactive?: boolean }) {
+/** Child group that grows in during a construction window. */
+function BuildStage({ from, to, children }: { from: number; to: number; children: ReactNode }) {
+  const build = useContext(BuildCtx);
+  const g = useRef<Group>(null);
+  useFrame(() => {
+    if (!g.current) return;
+    const t = easeOut(windowed(build.current, from, to));
+    g.current.visible = t > 0.01;
+    g.current.scale.set(1, Math.max(0.001, t), 1);
+  });
+  return <group ref={g}>{children}</group>;
+}
+
+export function ProjectBuilding({ project, position, interactive: interactiveProp = true }: { project: Project; position: [number, number, number]; interactive?: boolean }) {
+  const constructing = useConstruction((s) => interactiveProp && project.id in s.sites);
+  const interactive = interactiveProp && !constructing;
+  const build = useRef(constructing ? constructionProgress(project.id) : 1);
+  useFrame(() => {
+    if (!constructing) { build.current = 1; return; }
+    build.current = constructionProgress(project.id);
+    if (build.current >= 1) {
+      useConstruction.getState().complete(project.id);
+      useCityStore.getState().notify("Headquarters Completed");
+    }
+  });
   const [hover, setHover] = useState(false);
   const selected = useCityStore((s) => s.selectedProjectId === project.id);
   const selectProject = useCityStore((s) => s.selectProject);
@@ -224,6 +259,7 @@ export function ProjectBuilding({ project, position, interactive = true }: { pro
   }
 
   return (
+    <BuildCtx.Provider value={build}>
     <RevealCtx.Provider value={reveal}>
       <group
         position={position}
@@ -231,16 +267,17 @@ export function ProjectBuilding({ project, position, interactive = true }: { pro
         onPointerOut={() => { if (!interactive) return; setHover(false); document.body.style.cursor = ""; }}
         onClick={(e) => { if (!interactive) return; e.stopPropagation(); if (e.delta > 4) return; useCityStore.getState().selectWorker(null); selectProject(project.id); }}
       >
+        {constructing && <ConstructionSite progress={build} accent={a} height={top} />}
         <mesh position={[0, 0.02, 0]} receiveShadow>
           <boxGeometry args={[5.8, 0.05, 5.8]} />
           <meshStandardMaterial color={hl ? "#dbe8f6" : "#e6e9ec"} />
         </mesh>
         {blocks.map((b, i) => (
           <group key={i} position={b.offset}>
-            <GlassBlock w={b.w} d={b.d} floors={b.floors} baseY={b.offset[1]} cutY={cutY} live={inspecting} accent={a} highlight={hl} plan={plans?.[i] ?? null} blockIndex={i} employees={employees} />
+            <GlassBlock w={b.w} d={b.d} floors={b.floors} baseY={b.offset[1]} totalH={floors * FLOOR_H + 0.6} cutY={cutY} live={inspecting} accent={a} highlight={hl} plan={plans?.[i] ?? null} blockIndex={i} employees={employees} />
           </group>
         ))}
-        {extras}
+        <BuildStage from={0.84} to={1}>{extras}</BuildStage>
         {hl && ([[0, -2.9, 5.9, 0.09], [0, 2.9, 5.9, 0.09], [-2.9, 0, 0.09, 5.9], [2.9, 0, 0.09, 5.9]] as const).map(([x, z, w, d], i) => (
           <mesh key={`outline-${i}`} position={[x, 0.07, z]}>
             <boxGeometry args={[w, 0.055, d]} />
@@ -257,5 +294,6 @@ export function ProjectBuilding({ project, position, interactive = true }: { pro
         )}
       </group>
     </RevealCtx.Provider>
+    </BuildCtx.Provider>
   );
 }
