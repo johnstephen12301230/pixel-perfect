@@ -6,3 +6,4 @@
 - [x] Phase 4: living technology employees
 - [x] Phase 5: living city (pedestrians, cars, crosswalk signals)
 - [x] Phase 6: build your own project
+- [x] Phase 7: construction and city expansion
