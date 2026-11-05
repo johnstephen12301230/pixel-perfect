@@ -29,6 +29,8 @@ interface CityState {
   builderOpen: boolean;
   openBuilder: (slotId: string) => void;
   closeBuilder: () => void;
+  /** Close the form but keep the camera on the slot to watch construction. */
+  finishBuilder: () => void;
 }
 
 export const useCityStore = create<CityState>((set) => ({
@@ -72,6 +74,7 @@ export const useCityStore = create<CityState>((set) => ({
     cameraResetToken: s.selectedSlotId === slotId ? s.cameraResetToken : s.cameraResetToken + 1,
     interaction: "focusing-construction-slot" })),
   closeBuilder: () => set((s) => ({ builderOpen: false, selectedSlotId: null, cameraResetToken: s.cameraResetToken + 1, interaction: s.selectedProjectId ? s.interaction : "returning-to-city" })),
+  finishBuilder: () => set({ builderOpen: false }),
   completeCameraTransition: (token) => set((s) => {
     if (token !== s.cameraResetToken) return s;
     return { interaction: s.selectedProjectId ? "inspecting-building" : s.selectedSlotId ? "focusing-construction-slot" : "city-overview" };

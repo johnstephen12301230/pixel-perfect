@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useConstruction } from "@/store/useConstruction";
 import { ArrowLeft, ArrowRight, Check, Download, MapPin, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCityStore } from "@/store/useCityStore";
@@ -77,7 +78,9 @@ export function BuildProjectDialog() {
     const project = formToProject(form, { lotId: lot.id, slotId }, makeProjectId(form.name, new Set(reg.projects.map((p) => p.id))));
     const res = reg.addProject(project);
     if (!res.ok) return alertSlot(res.reason);
-    setCreated({ project, persisted: res.persisted });
+    useConstruction.getState().start(project.id);
+    useCityStore.getState().finishBuilder();
+    if (!res.persisted) useCityStore.getState().notify("This browser couldn't save the project. Export it from My Projects to keep it.");
   };
   const alertSlot = (reason: string) => setErrors({ buildingStyle: `${reason} Close the builder and pick another empty slot.` });
 
