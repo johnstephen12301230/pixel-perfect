@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Download, Building2, ChevronLeft, LayoutGrid, Map, Settings, User, X } from "lucide-react";
+import { Download, Building2, ChevronLeft, LayoutGrid, Map, Settings, User, X, Activity } from "lucide-react";
+import { CityIntelligence } from "@/components/environment/CityIntelligence";
+import { Button } from "@/components/ui/button";
 import { useCityStore } from "@/store/useCityStore";
 import { getLots, useProjectRegistry } from "@/store/useProjectRegistry";
 import { downloadProjectConfig, locationLabel } from "@/utils/projectDraft";
 import { cn } from "@/lib/utils";
 
-type View = "menu" | "projects" | "settings";
+type View = "menu" | "projects" | "settings" | "intelligence";
 
 export function DevCitySidebar() {
   const { sidebarOpen, setSidebarOpen, resetCity, selectProject, selectedProjectId } = useCityStore();
@@ -25,7 +27,7 @@ export function DevCitySidebar() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSidebarOpen(false);
       if (e.key === "Tab" && panelRef.current) {
-        const f = panelRef.current.querySelectorAll<HTMLElement>("button, a[href]");
+        const f = panelRef.current.querySelectorAll<HTMLElement>("button, a[href], select, input");
         const first = f[0], last = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
@@ -82,6 +84,7 @@ export function DevCitySidebar() {
               <Settings className="h-4 w-4 text-primary" /> Settings
               <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">Soon</span>
             </button>
+            <Button variant="ghost" className={row} onClick={() => setView("intelligence")}><Activity className="h-4 w-4 text-primary" /> City Intelligence</Button>
           </nav>
         )}
 
@@ -112,6 +115,7 @@ export function DevCitySidebar() {
         )}
         {view === "projects" && !storageOk && <p className="m-2 text-xs text-muted-foreground">This browser can't save drafts. Export each new project to keep it.</p>}
 
+        {view === "intelligence" && <CityIntelligence />}
         {view === "settings" && (
           <div className="m-2 rounded-2xl border border-dashed border-border p-6 text-center">
             <Settings className="mx-auto h-6 w-6 text-muted-foreground" />
