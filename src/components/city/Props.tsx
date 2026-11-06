@@ -1,13 +1,19 @@
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
+import { environmentFrame } from "@/utils/environment";
 type P = { position: [number, number, number]; scale?: number; rotation?: number };
 
 export function Tree({ position, scale = 1 }: P) {
+  const crown = useRef<Group>(null);
+  useFrame(() => { if (crown.current) crown.current.rotation.z = environmentFrame.reduced ? 0 : Math.sin(environmentFrame.elapsed * 1.2 + position[0]) * .025 * environmentFrame.cloud; });
   return (
     <group position={position} scale={scale}>
       <mesh position={[0, 0.45, 0]} castShadow>
         <cylinderGeometry args={[0.09, 0.12, 0.9, 6]} />
         <meshStandardMaterial color="#8a6a4f" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 1.25, 0]} castShadow>
+      <group ref={crown}><mesh position={[0, 1.25, 0]} castShadow>
         <icosahedronGeometry args={[0.62, 0]} />
         <meshStandardMaterial color="#6fae7a" roughness={0.8} flatShading />
       </mesh>
@@ -15,6 +21,7 @@ export function Tree({ position, scale = 1 }: P) {
         <icosahedronGeometry args={[0.38, 0]} />
         <meshStandardMaterial color="#86c290" roughness={0.8} flatShading />
       </mesh>
+      </group>
     </group>
   );
 }
@@ -53,7 +60,7 @@ export function Streetlight({ position }: P) {
       </mesh>
       <mesh position={[-0.4, 2.14, -0.4]}>
         <sphereGeometry args={[0.1, 8, 8]} />
-        <meshStandardMaterial color="#fff6d8" emissive="#ffe7a8" emissiveIntensity={0.6} />
+        <meshStandardMaterial color="#fff6d8" emissive="#ffe7a8" emissiveIntensity={0} userData={{ streetlamp: true }} />
       </mesh>
     </group>
   );

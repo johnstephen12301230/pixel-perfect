@@ -6,6 +6,8 @@ import { ConstructionPanel } from "@/components/construction/ConstructionPanel";
 import { useConstruction } from "@/store/useConstruction";
 import { useProjectRegistry } from "@/store/useProjectRegistry";
 import { ProjectDetailsPanel } from "@/components/projects/ProjectDetailsPanel";
+import { EnvironmentControls } from "@/components/environment/EnvironmentControls";
+import { useEnvironmentStore } from "@/store/useEnvironmentStore";
 
 export const Route = createFileRoute("/projects")({
   ssr: false,
@@ -24,6 +26,7 @@ export const Route = createFileRoute("/projects")({
 
 function ProjectsPage() {
   useEffect(() => {
+    useEnvironmentStore.getState().hydrate();
     useProjectRegistry.getState().hydrate();
     useConstruction.getState().hydrate(useProjectRegistry.getState().localIds);
   }, []);
@@ -31,6 +34,7 @@ function ProjectsPage() {
     <main>
       <h1 className="sr-only">DevCity projects</h1>
       <CityCanvas />
+      <EnvironmentControls />
       <ProjectDetailsPanel />
       <BuildProjectDialog />
       <ConstructionPanel />

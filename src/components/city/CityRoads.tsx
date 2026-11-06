@@ -18,11 +18,11 @@ export function CityRoads({ lots }: { lots: DevelopmentLot[] }) {
           {/* N-S and E-W roads */}
           <mesh position={[c, 0.01, 0]} rotation-x={-Math.PI / 2} receiveShadow>
             <planeGeometry args={[ROAD_WIDTH, EXTENT]} />
-            <meshStandardMaterial color="#5d6a78" roughness={0.85} />
+            <meshStandardMaterial color="#5d6a78" roughness={0.85} userData={{ wetRoad: true }} />
           </mesh>
           <mesh position={[0, 0.012, c]} rotation-x={-Math.PI / 2} receiveShadow>
             <planeGeometry args={[EXTENT, ROAD_WIDTH]} />
-            <meshStandardMaterial color="#5d6a78" roughness={0.85} />
+            <meshStandardMaterial color="#5d6a78" roughness={0.85} userData={{ wetRoad: true }} />
           </mesh>
           {/* Lane dashes */}
           {dashes.map((t) =>

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { Color, Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { environmentFrame, hashEnvironment, windowStrength } from "@/utils/environment";
 import { CityLabel } from "@/components/city/CityLabel";
 import { StoreyInterior } from "@/components/interiors/BuildingInterior";
 import type { Project } from "@/types/project";
@@ -18,6 +19,7 @@ const WALL_FADED = 0.08;
 
 /** Cutaway progress 0 (closed) → 1 (open), written per frame without React state. */
 const RevealCtx = createContext<MutableRefObject<number>>({ current: 0 });
+const IlluminationCtx = createContext("preview");
 const tmp = new Vector3();
 
 function setOpacity(mat: MeshStandardMaterial, opacity: number) {
@@ -27,15 +29,38 @@ function setOpacity(mat: MeshStandardMaterial, opacity: number) {
 
 /** Facade wall that fades only while it faces the camera, so any inspection angle stays readable. */
 function FadeWall({ position, size, normal, accent, highlight }: { position: [number, number, number]; size: [number, number, number]; normal: [number, number, number]; accent?: string; highlight: { color: string; on: boolean } }) {
+  const identity = useContext(IlluminationCtx);
+  const lightUniform = useMemo(() => ({ value: 0 }), []);
   const reveal = useContext(RevealCtx);
   const storey = useContext(StoreyCtx);
   const fade = useRef(0);
   const n = useMemo(() => new Vector3(...normal), [normal]);
-  const glass = useMemo(() => { const m = new MeshStandardMaterial({ ...GLASS, transparent: true }); m.userData["facade"] = true; return m; }, []);
+  const glass = useMemo(() => {
+    const m = new MeshStandardMaterial({ ...GLASS, transparent: true }); m.userData["facade"] = true;
+    const seed = hashEnvironment(`${identity}:${normal.join(',')}`);
+    const color = new Color(getComputedStyle(document.documentElement).getPropertyValue('--city-window').trim());
+    m.onBeforeCompile = shader => {
+      shader.uniforms['cityDarkness'] = lightUniform;
+      shader.uniforms['citySeed'] = { value: seed };
+      shader.uniforms['cityWindowColor'] = { value: color };
+      shader.vertexShader = 'varying vec2 cityUv;\n' + shader.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\ncityUv = uv;');
+      shader.fragmentShader = 'varying vec2 cityUv;\nuniform float cityDarkness;\nuniform float citySeed;\nuniform vec3 cityWindowColor;\n' + shader.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        float cell = floor(cityUv.x * 5.0);
+        float pattern = fract(sin(cell * 12.9898 + citySeed * 78.233) * 43758.5453);
+        float mask = step(0.12, fract(cityUv.x * 5.0)) * step(fract(cityUv.x * 5.0), 0.88) * step(0.2, cityUv.y) * step(cityUv.y, 0.78);
+        float lit = smoothstep(0.12 + pattern * 0.65, 0.42 + pattern * 0.65, cityDarkness) * step(0.18, citySeed);
+        totalEmissiveRadiance += cityWindowColor * lit * mask * 0.85;
+      `);
+    };
+    m.customProgramCacheKey = () => 'devcity-windows-v1';
+    return m;
+  }, [identity, normal, lightUniform]);
   const stripe = useMemo(() => { if (!accent) return null; const m = new MeshStandardMaterial({ color: accent, transparent: true }); m.userData["facade"] = true; return m; }, [accent]);
   useEffect(() => { glass.emissive.set(highlight.color); glass.emissiveIntensity = highlight.on ? 0.18 : 0; }, [glass, highlight.color, highlight.on]);
   useEffect(() => () => { glass.dispose(); stripe?.dispose(); }, [glass, stripe]);
   useFrame(({ camera }, dt) => {
+    lightUniform.value = environmentFrame.darkness;
+    if (stripe) { stripe.emissive.set(accent ?? FRAME); stripe.emissiveIntensity = environmentFrame.darkness * .45; }
     camera.getWorldDirection(tmp).negate();
     tmp.y = 0;
     const facing = tmp.normalize().dot(n) > 0.15 ? 1 : 0;
@@ -112,6 +137,7 @@ function Storey({ level, hidden, buildH, children }: { level: number; hidden: bo
 }
 
 function GlassBlock({ w, d, floors, baseY, totalH, cutY, live, accent, highlight, plan, blockIndex, employees }: { w: number; d: number; floors: number; baseY: number; totalH: number; cutY: number; live: boolean; accent: string; highlight: boolean; plan: BlockPlan | null; blockIndex: number; employees: TechnologyEmployee[] }) {
+  const identity = useContext(IlluminationCtx);
   const H = FLOOR_H;
   const hl = { color: accent, on: highlight };
   return (
@@ -119,10 +145,10 @@ function GlassBlock({ w, d, floors, baseY, totalH, cutY, live, accent, highlight
       {Array.from({ length: floors }, (_, level) => {
         const hidden = baseY + level * H >= cutY - 0.01;
         return (
-          <Storey key={level} level={level} hidden={hidden} buildH={Math.min(1, (baseY + level * H) / totalH)}>
+          <IlluminationCtx.Provider key={level} value={`${identity}:${blockIndex}:${level}`}><Storey level={level} hidden={hidden} buildH={Math.min(1, (baseY + level * H) / totalH)}>
             <mesh receiveShadow>
               <boxGeometry args={[w + 0.06, 0.08, d + 0.06]} />
-              <meshStandardMaterial color={FRAME} roughness={0.5} />
+              <OfficeFloorMaterial identity={`${identity}:${blockIndex}:${level}`} />
             </mesh>
             <FadeWall position={[0, H / 2, d / 2]} size={[w, H, 0.04]} normal={[0, 0, 1]} accent={accent} highlight={hl} />
             <FadeWall position={[0, H / 2, -d / 2]} size={[w, H, 0.04]} normal={[0, 0, -1]} highlight={hl} />
@@ -147,11 +173,18 @@ function GlassBlock({ w, d, floors, baseY, totalH, cutY, live, accent, highlight
                 <StoreyInterior plan={plan} level={level} blockIndex={blockIndex} employees={employees} live={live && !hidden} />
               </group>
             )}
-          </Storey>
+          </Storey></IlluminationCtx.Provider>
         );
       })}
     </group>
   );
+}
+
+function OfficeFloorMaterial({ identity }: { identity: string }) {
+  const mat = useRef<MeshStandardMaterial>(null);
+  const color = useMemo(() => new Color(getComputedStyle(document.documentElement).getPropertyValue('--city-window').trim()), []);
+  useFrame(() => { if (mat.current) mat.current.emissiveIntensity = .1 + windowStrength(identity, environmentFrame.darkness) * .3; });
+  return <meshStandardMaterial ref={mat} color={FRAME} roughness={.5} emissive={color} emissiveIntensity={.1}/>;
 }
 
 /** Child group that grows in during a construction window. */
@@ -207,7 +240,8 @@ export function ProjectBuilding({ project, position, interactive: interactivePro
   const inspecting = useCityStore((s) => s.selectedProjectId === project.id && s.interaction === "inspecting-building");
   const focusId = useCityStore((s) => s.focusedDepartmentId) ?? defaultFocusDepartment(employees);
   const focusEmp = employees.find((e) => e.department.id === focusId);
-  const cutY = inspecting && focusEmp ? blocks[focusEmp.blockIndex]!.offset[1] + (focusEmp.floorLevel + 1) * FLOOR_H : Infinity;
+  const focusBlock = focusEmp ? blocks[focusEmp.blockIndex] : undefined;
+  const cutY = inspecting && focusEmp && focusBlock ? focusBlock.offset[1] + (focusEmp.floorLevel + 1) * FLOOR_H : Infinity;
   const { accentColor: a, floors } = project;
 
   let extras: ReactNode = null;
@@ -259,7 +293,7 @@ export function ProjectBuilding({ project, position, interactive: interactivePro
   }
 
   return (
-    <BuildCtx.Provider value={build}>
+    <IlluminationCtx.Provider value={project.id}><BuildCtx.Provider value={build}>
     <RevealCtx.Provider value={reveal}>
       <group
         position={position}
@@ -294,6 +328,6 @@ export function ProjectBuilding({ project, position, interactive: interactivePro
         )}
       </group>
     </RevealCtx.Provider>
-    </BuildCtx.Provider>
+    </BuildCtx.Provider></IlluminationCtx.Provider>
   );
 }

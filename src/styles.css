@@ -39,6 +39,16 @@
 }
 
 :root {
+  --city-morning: #dfeaf3;
+  --city-afternoon: #c5e3f3;
+  --city-evening: #dbaba1;
+  --city-night: #24354d;
+  --city-overcast: #a4b4c2;
+  --city-sun: #fff1db;
+  --city-moon: #b5d0ee;
+  --city-rain: #bdd9eb;
+  --city-window: #ffe6b0;
+  --city-tail: #ef5449;
   --radius: 1rem;
   --background: oklch(0.955 0.012 230);
   --foreground: oklch(0.22 0.03 250);

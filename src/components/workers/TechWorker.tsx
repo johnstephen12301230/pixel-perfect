@@ -7,6 +7,7 @@ import type { Activity, StationRegistry, TechnologyEmployee, WorkerStation } fro
 import { WorkerAnimationController } from "./WorkerAnimationController";
 import { WorkerCharacter, emptyRig } from "./WorkerCharacter";
 import { WorkerInteractionPopover } from "./WorkerInteractionPopover";
+import { environmentFrame, hashEnvironment } from "@/utils/environment";
 
 const TECH_COLORS = ["#2f7cf6", "#14b8c4", "#e0864a", "#5b6bd6", "#d4577b", "#4f9a7a", "#c9a227"];
 
@@ -21,8 +22,10 @@ export function TechWorker({ employee, stations, registry, rnd, first, reduced, 
   useEffect(() => () => { registry.release(employee.id); document.body.style.cursor = ""; }, [registry, employee.id]);
 
   useFrame((_, dt) => {
-    ctrl.update(Math.min(dt, 0.05));
-    ctrl.apply(rig, dt);
+    const shift = hashEnvironment(employee.department.id) > .45 ? 1 - environmentFrame.darkness * .35 : 1;
+    const step = Math.min(dt, 0.05) * shift;
+    ctrl.update(step);
+    ctrl.apply(rig, step);
     const g = root.current;
     if (g) { g.position.set(ctrl.pos[0], employee.floorY, ctrl.pos[1]); g.rotation.y = ctrl.yaw; }
   });
