@@ -7,3 +7,6 @@
 - [x] Phase 5: living city (pedestrians, cars, crosswalk signals)
 - [x] Phase 6: build your own project
 - [x] Phase 7: construction and city expansion
+- [ ] Phase 8: centralized persisted clock, weather and presets
+- [ ] Phase 8: atmosphere, building/street/car lighting and city-life response
+- [ ] Phase 8: live City Intelligence and regression verification
