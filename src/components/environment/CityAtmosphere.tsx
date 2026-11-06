@@ -38,18 +38,21 @@ export function CityAtmosphere() {
     env.fog += ((weather === 'Foggy' ? 1 : 0) - env.fog) * blend;
     const h = env.minutes / 60; const keys = [{h:0,i:3},{h:5,i:3},{h:8,i:0},{h:13,i:1},{h:17,i:1},{h:18.5,i:2},{h:21,i:3},{h:24,i:3}];
     const idx = keys.findIndex(k => k.h > h); const a = keys[Math.max(0, idx-1)], b = keys[idx];
-    const colors = palette.current; if (!a || !b || !colors[a.i] || !colors[b.i]) return;
-    target.copy(colors[a.i]).lerp(colors[b.i], (h-a.h)/(b.h-a.h)).lerp(colors[4], env.cloud * .5);
+    const colors = palette.current;
+    const morning = colors[0], overcast = colors[4], sunlight = colors[5], moonlight = colors[6], rainColor = colors[7];
+    const from = a ? colors[a.i] : undefined, to = b ? colors[b.i] : undefined;
+    if (!a || !b || !from || !to || !morning || !overcast || !sunlight || !moonlight || !rainColor) return;
+    target.copy(from).lerp(to, (h-a.h)/(b.h-a.h)).lerp(overcast, env.cloud * .5);
     if (scene.background instanceof Color) scene.background.lerp(target, blend);
     if (scene.fog instanceof Fog) { scene.fog.color.copy(scene.background instanceof Color ? scene.background : target); scene.fog.near = extent * (1.4 - env.fog * 1.15); scene.fog.far = extent * (3.5 - env.fog * 2.4); }
-    if (sun.current) { sun.current.intensity = (2.2 - env.darkness * 1.9) * (1-env.cloud*.65); sun.current.color.copy(colors[5]).lerp(colors[6], env.darkness); sun.current.position.set(25*Math.cos(h/24*Math.PI*2), 15+25*(1-env.darkness), 15); }
-    if (hemi.current) { hemi.current.intensity = .9 - env.darkness * .42; hemi.current.color.copy(colors[0]).lerp(colors[6], env.darkness); }
+    if (sun.current) { sun.current.intensity = (2.2 - env.darkness * 1.9) * (1-env.cloud*.65); sun.current.color.copy(sunlight).lerp(moonlight, env.darkness); sun.current.position.set(25*Math.cos(h/24*Math.PI*2), 15+25*(1-env.darkness), 15); }
+    if (hemi.current) { hemi.current.intensity = .9 - env.darkness * .42; hemi.current.color.copy(morning).lerp(moonlight, env.darkness); }
     gl.toneMappingExposure = 1 - env.darkness*.12 - env.rain*.08;
-    if (rainMat.current) { rainMat.current.opacity = env.rain*.48; rainMat.current.color.copy(colors[7]); }
-    if (!env.reduced && env.rain > .01) { for (let i=0;i<180;i++) { const k=i*6; positions[k+1] -= dt*12; if (positions[k+1]<0) positions[k+1]=18; positions[k+4]=positions[k+1]+.45; } attribute.needsUpdate=true; }
+    if (rainMat.current) { rainMat.current.opacity = env.rain*.48; rainMat.current.color.copy(rainColor); }
+    if (!env.reduced && env.rain > .01) { for (let i=0;i<180;i++) { const k=i*6; const y = (positions[k+1] ?? 18) - dt*12; positions[k+1] = y < 0 ? 18 : y; positions[k+4]=(positions[k+1] ?? 0)+.45; } attribute.needsUpdate=true; }
     publication.current += dt; if (publication.current >= 1) { publication.current=0; s.publish(env.minutes,weather); }
-    gl.domElement.dataset.sceneReady = '1';
-    if (import.meta.env.DEV) { gl.domElement.dataset.darkness = env.darkness.toFixed(3); gl.domElement.dataset.rain = env.rain.toFixed(3); }
+    gl.domElement.dataset['sceneReady'] = '1';
+    if (import.meta.env.DEV) { gl.domElement.dataset['darkness'] = env.darkness.toFixed(3); gl.domElement.dataset['rain'] = env.rain.toFixed(3); }
   }, -2);
   return <>
     <hemisphereLight ref={hemi} intensity={.9} />
